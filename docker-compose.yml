@@ -1,5 +1,13 @@
 version: '3.8'
 services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
   api-gateway:
     build: ./api-gateway
     ports:
@@ -17,6 +25,7 @@ services:
       - "5001:5001"
     environment:
       - PORT=5001
+      - MONGO_URI=mongodb+srv://root:root@cluster0.5t3vhyk.mongodb.net/patient_db?appName=Cluster0
       
   doctor-service:
     build: ./services/doctor-service
@@ -24,6 +33,7 @@ services:
       - "5002:5002"
     environment:
       - PORT=5002
+      - MONGO_URI=mongodb+srv://root:root@cluster0.5t3vhyk.mongodb.net/doctor_db?appName=Cluster0
       
   appointment-service:
     build: ./services/appointment-service
@@ -31,6 +41,7 @@ services:
       - "5003:5003"
     environment:
       - PORT=5003
+      - MONGO_URI=mongodb+srv://root:root@cluster0.5t3vhyk.mongodb.net/appointment_db?appName=Cluster0
 
   telemedicine-service:
     build: ./services/telemedicine-service
@@ -57,3 +68,6 @@ services:
     build: ./frontend
     ports:
       - "5173:5173"
+
+volumes:
+  mongodb_data:
