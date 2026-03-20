@@ -1,0 +1,50 @@
+name: Healthcare Platform CI/CD Continuous Integration
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    name: Build & Test Microservices
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: 
+          - api-gateway
+          - services/patient-service
+          - services/doctor-service
+          - services/appointment-service
+          - services/telemedicine-service
+          - services/payment-service
+          - services/notification-service
+          - services/ai-symptom-service
+          - frontend
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+
+    - name: Install Dependencies
+      working-directory: ./${{ matrix.service }}
+      run: npm install
+
+    - name: Run Tests (if existing)
+      working-directory: ./${{ matrix.service }}
+      run: npm test --if-present
+
+    - name: Validate Docker Build
+      working-directory: ./${{ matrix.service }}
+      run: |
+        # Ensure compatible image naming by removing slashes
+        IMAGE_NAME=$(echo "healthcare-${{ matrix.service }}" | sed 's/\//-/g')
+        echo "Building Docker Image: $IMAGE_NAME"
+        docker build -t $IMAGE_NAME:latest .
