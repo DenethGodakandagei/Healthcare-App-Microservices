@@ -11,58 +11,90 @@ services:
   api-gateway:
     build: ./api-gateway
     ports:
-      - "5000:5000"
+      - "4000:4000"
     environment:
-      - PORT=5000
+      - PORT=4000
     depends_on:
-      - patient-service
-      - doctor-service
+      - ai-symptom-service
       - appointment-service
+      - doctor-service
+      - identity-service
+      - notification-service
+      - patient-service
+      - payment-service
+      - telemedicine-service
 
-  patient-service:
-    build: ./services/patient-service
+  ai-symptom-service:
+    build: ./services/ai-symptom-service
     ports:
-      - "5001:5001"
+      - "4001:4001"
     environment:
-      - PORT=5001
-      - MONGO_URI=mongodb+srv://root:root@cluster0.5t3vhyk.mongodb.net/patient_db?appName=Cluster0
-      
-  doctor-service:
-    build: ./services/doctor-service
-    ports:
-      - "5002:5002"
-    environment:
-      - PORT=5002
-      - MONGO_URI=mongodb+srv://root:root@cluster0.5t3vhyk.mongodb.net/doctor_db?appName=Cluster0
-      
+      - PORT=4001
+      - MONGO_URI=mongodb://mongodb:27017/ai_symptom_db
+      - JWT_SECRET=secret
+
   appointment-service:
     build: ./services/appointment-service
     ports:
-      - "5003:5003"
+      - "4002:4002"
     environment:
-      - PORT=5003
-      - MONGO_URI=mongodb+srv://root:root@cluster0.5t3vhyk.mongodb.net/appointment_db?appName=Cluster0
+      - PORT=4002
+      - MONGO_URI=mongodb://mongodb:27017/appointment_db
+      - JWT_SECRET=secret
 
-  telemedicine-service:
-    build: ./services/telemedicine-service
+  doctor-service:
+    build: ./services/doctor-service
     ports:
-      - "5004:5004"
+      - "4003:4003"
     environment:
-      - PORT=5004
+      - PORT=4003
+      - MONGO_URI=mongodb://mongodb:27017/doctor_db
+      - JWT_SECRET=secret
 
-  payment-service:
-    build: ./services/payment-service
+  identity-service:
+    build: ./services/identity-service
     ports:
-      - "5005:5005"
+      - "4004:4004"
     environment:
-      - PORT=5005
+      - PORT=4004
+      - MONGO_URI=mongodb://mongodb:27017/identity_db
+      - JWT_SECRET=secret
 
   notification-service:
     build: ./services/notification-service
     ports:
-      - "5006:5006"
+      - "4005:4005"
     environment:
-      - PORT=5006
+      - PORT=4005
+      - MONGO_URI=mongodb://mongodb:27017/notification_db
+      - JWT_SECRET=secret
+
+  patient-service:
+    build: ./services/patient-service
+    ports:
+      - "4006:4006"
+    environment:
+      - PORT=4006
+      - MONGO_URI=mongodb://mongodb:27017/patient_db
+      - JWT_SECRET=secret
+
+  payment-service:
+    build: ./services/payment-service
+    ports:
+      - "4007:4007"
+    environment:
+      - PORT=4007
+      - MONGO_URI=mongodb://mongodb:27017/payment_db
+      - JWT_SECRET=secret
+
+  telemedicine-service:
+    build: ./services/telemedicine-service
+    ports:
+      - "4008:4008"
+    environment:
+      - PORT=4008
+      - MONGO_URI=mongodb://mongodb:27017/telemedicine_db
+      - JWT_SECRET=secret
 
   frontend:
     build: ./frontend

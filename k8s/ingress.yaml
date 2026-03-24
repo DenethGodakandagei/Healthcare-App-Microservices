@@ -8,11 +8,66 @@ spec:
   rules:
   - http:
       paths:
+      - path: /api/auth
+        pathType: Prefix
+        backend:
+          service:
+            name: identity-service
+            port:
+              number: 4004
       - path: /api/patients
         pathType: Prefix
         backend:
           service:
             name: patient-service
             port:
-              number: 5001
-      # Add other services here
+              number: 4006
+      - path: /api/symptoms
+        pathType: Prefix
+        backend:
+          service:
+            name: ai-symptom-service
+            port:
+              number: 4001
+      - path: /api/appointments
+        pathType: Prefix
+        backend:
+          service:
+            name: appointment-service
+            port:
+              number: 4002
+      - path: /api/doctors
+        pathType: Prefix
+        backend:
+          service:
+            name: doctor-service
+            port:
+              number: 4003
+      - path: /api/notifications
+        pathType: Prefix
+        backend:
+          service:
+            name: notification-service
+            port:
+              number: 4005
+      - path: /api/payments
+        pathType: Prefix
+        backend:
+          service:
+            name: payment-service
+            port:
+              number: 4007
+      - path: /api/telemedicine
+        pathType: Prefix
+        backend:
+          service:
+            name: telemedicine-service
+            port:
+              number: 4008
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-gateway
+            port:
+              number: 4000
