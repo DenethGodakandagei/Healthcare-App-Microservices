@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doctor-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: doctor-service
+  template:
+    metadata:
+      labels:
+        app: doctor-service
+    spec:
+      containers:
+        - name: doctor-service
+          image: doctor-service:latest
+          ports:
+            - containerPort: 4003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doctor-service
+spec:
+  type: ClusterIP
+  selector:
+    app: doctor-service
+  ports:
+    - protocol: TCP
+      port: 4003
+      targetPort: 4003
