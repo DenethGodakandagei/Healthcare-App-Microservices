@@ -3,11 +3,27 @@ import {
   bookAppointment,
   getPatientAppointments,
   getDoctorAppointments,
-  updateAppointmentStatus
+  updateAppointmentStatus,
+  createSession,
+  getSessions,
+  getSessionById,
+  updateSession,
+  deleteSession
 } from '../controllers/appointmentController.js';
 
 const router = express.Router();
 
+// Session CRUD
+router.route('/sessions')
+  .post(createSession)
+  .get(getSessions);
+
+router.route('/sessions/:id')
+  .get(getSessionById)
+  .put(updateSession)
+  .delete(deleteSession);
+
+// Appointment Routes
 router.route('/')
   .post(bookAppointment);
 
