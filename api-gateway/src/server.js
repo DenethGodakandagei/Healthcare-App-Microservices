@@ -7,6 +7,8 @@ import authMiddleware from './middleware/authMiddleware.js';
 const app = express();
 app.use(cors());
 
+app.get('/health', (req, res) => res.status(200).send('API Gateway is active.'));
+
 // Proxy requests to underlying microservices
 // Public routes
 app.use('/api/auth', createProxyMiddleware({ 
@@ -24,8 +26,6 @@ app.use('/api/notifications', createProxyMiddleware({ target: (process.env.NOTIF
 app.use('/api/patients', createProxyMiddleware({ target: (process.env.PATIENT_SERVICE_URL || 'http://localhost:4006') + '/api/patients', changeOrigin: true }));
 app.use('/api/payments', createProxyMiddleware({ target: (process.env.PAYMENT_SERVICE_URL || 'http://localhost:4007') + '/api/payments', changeOrigin: true }));
 app.use('/api/telemedicine', createProxyMiddleware({ target: (process.env.TELEMEDICINE_SERVICE_URL || 'http://localhost:4008') + '/api/telemedicine', changeOrigin: true }));
-
-app.get('/health', (req, res) => res.status(200).send('API Gateway is active.'));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`API Gateway listening on port ${PORT}`));
