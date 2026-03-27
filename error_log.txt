@@ -1,0 +1,14 @@
+Raw response: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot POST /register</pre>
+</body>
+</html>
+
+
+Full Error:
+{"stack":"SyntaxError: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at IncomingMessage.<anonymous> (file:///C:/Users/Acer/OneDrive/Documents/Healthcare-App-Microservices/test_script.js:11:60)\n    at IncomingMessage.emit (node:events:530:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)","message":"Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"}

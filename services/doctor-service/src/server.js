@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import connectDB from './config/db.js';
 import 'dotenv/config';
+import doctorRoutes from './routes/doctorRoutes.js';
 
 // Connect to MongoDB
 connectDB();
@@ -20,6 +21,8 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', service: 'Doctor Service' });
 });
+
+app.use('/api/doctors', doctorRoutes);
 
 const PORT = process.env.PORT || 4003;
 app.listen(PORT, () => {
