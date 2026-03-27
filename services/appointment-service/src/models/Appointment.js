@@ -14,6 +14,15 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  sessionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'AppointmentSession',
+    required: true
+  },
+  tokenNumber: {
+    type: Number,
+    required: true
+  },
   date: {
     type: Date,
     required: true
