@@ -1,6 +1,11 @@
 import express from 'express';
 import cors from 'cors';
+import connectDB from './config/db.js';
 import 'dotenv/config';
+import telemedicineRoutes from './routes/telemedicineRoutes.js';
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 app.use(cors());
@@ -16,6 +21,8 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', service: 'Telemedicine Service' });
 });
+
+app.use('/api/telemedicine', telemedicineRoutes);
 
 const PORT = process.env.PORT || 4008;
 app.listen(PORT, () => {
