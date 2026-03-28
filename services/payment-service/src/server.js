@@ -1,6 +1,11 @@
 import express from 'express';
 import cors from 'cors';
+import connectDB from './config/db.js';
 import 'dotenv/config';
+import paymentRoutes from './routes/paymentRoutes.js';
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 app.use(cors());
@@ -16,6 +21,8 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', service: 'Payment Service' });
 });
+
+app.use('/api/payments', paymentRoutes);
 
 const PORT = process.env.PORT || 4007;
 app.listen(PORT, () => {
