@@ -40,6 +40,18 @@ const appointmentSchema = new mongoose.Schema({
     enum: ['scheduled', 'completed', 'cancelled'],
     default: 'scheduled'
   },
+  patientName: {
+    type: String,
+    required: true
+  },
+  patientNIC: {
+    type: String,
+    required: true
+  },
+  patientPhone: {
+    type: String,
+    required: true
+  },
   reasonForVisit: {
     type: String
   },

@@ -47,6 +47,21 @@ export const getAllDoctors = async (req, res) => {
   }
 };
 
+// @desc    Get doctor by ID
+// @route   GET /api/doctors/:id
+// @access  Public
+export const getDoctorById = async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id);
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    res.status(200).json({ success: true, data: doctor });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Get current doctor profile
 // @route   GET /api/doctors/profile
 // @access  Private (Doctor)
