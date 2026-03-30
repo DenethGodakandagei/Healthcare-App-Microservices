@@ -1,10 +1,20 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 * {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 400; /* Using 400 as standard light-ish weight for readability */
   box-sizing: border-box;
+  letter-spacing: -0.01em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+strong, b, .font-bold {
+  font-weight: 700;
 }
 
 body {

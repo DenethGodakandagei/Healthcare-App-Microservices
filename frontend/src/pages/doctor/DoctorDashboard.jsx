@@ -585,8 +585,9 @@ const DoctorDashboard = () => {
               {activeTab === 'overview' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-gray-900 text-xl font-bold">
-                      Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, Dr. {user?.username || 'Doctor'} 👨‍⚕️
+                    <h2 className="text-gray-900 text-xl font-bold flex items-center gap-2">
+                       <div className="text-indigo-500"><Icon path={<><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 7a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 0-2h-3V8a1 1 0 0 0-1-1z"/></>} size={20} /></div>
+                       Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, Dr. {user?.username || 'Doctor'}
                     </h2>
                     <p className="text-gray-500 text-sm mt-1">Here&apos;s your practice summary for today.</p>
                   </div>

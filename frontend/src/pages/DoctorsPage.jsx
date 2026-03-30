@@ -19,12 +19,26 @@ const icons = {
   activity: <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>,
 };
 
+import doc1 from '../assets/doc1.png';
+import doc2 from '../assets/doc2.png';
+import doc3 from '../assets/doc3.png';
+import doc4 from '../assets/doc4.png';
+
+const doctorImages = [doc1, doc2, doc3, doc4];
+
 const DoctorsPage = () => {
   const [doctors, setDoctors] = useState([]);
   const [filteredDoctors, setFilteredDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [specialty, setSpecialty] = useState('All');
+
+  // Helper to persist images per doctor name/id
+  const getDoctorImage = (id) => {
+    // Simple hash-based mapping to ensure same doctor always gets same image
+    const index = Math.abs(id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % doctorImages.length;
+    return doctorImages[index];
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -103,9 +117,9 @@ const DoctorsPage = () => {
               {filteredDoctors.map((doc) => (
                 <div key={doc._id} className="group bg-white border border-gray-100 rounded-[2.5rem] p-4 hover:border-gray-900 transition-all hover:shadow-2xl hover:shadow-gray-100">
                    <div className="flex items-start gap-5">
-                      <div className="w-24 h-24 bg-gray-50 rounded-3xl overflow-hidden shrink-0">
+                      <div className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
                          <img
-                           src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${doc.userId}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                           src={getDoctorImage(doc._id)}
                            alt={doc.firstName}
                            className="w-full h-full object-cover transition-transform group-hover:scale-110"
                          />

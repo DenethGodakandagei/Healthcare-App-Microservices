@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import BookingSuccess from '../components/BookingSuccess';
-import { doctorAPI, sessionAPI, appointmentAPI } from '../services/api';
+import BookingForm from '../components/BookingForm';
+import { doctorAPI, sessionAPI, appointmentAPI, patientAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const Icon = ({ path, size = 20, className = "" }) => (
@@ -31,25 +32,16 @@ const BookingPage = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState(null);
-  const [booking, setBooking] = useState(false);
   const [error, setError] = useState('');
-  const [patientName, setPatientName] = useState('');
-  const [patientNIC, setPatientNIC] = useState('');
-  const [patientPhone, setPatientPhone] = useState('');
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [reason, setReason] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Fetch Doctor Profile first to get the userId
         const docRes = await doctorAPI.getById(doctorId);
         const doctorData = docRes.data?.data;
         if (!doctorData) throw new Error("Doctor not found");
         setDoctor(doctorData);
 
-        // 2. Fetch Sessions using the doctor's userId
         const sessRes = await sessionAPI.getAll({ 
           doctorId: doctorData.userId, 
           status: 'active' 
@@ -65,59 +57,13 @@ const BookingPage = () => {
     fetchData();
   }, [doctorId]);
 
-  const fillSelfDetails = async () => {
-    if (!user) return;
-    setLoadingProfile(true);
-    try {
-      // Try to get patient profile for auto-fill
-      const profileRes = await patientAPI.getProfile();
-      const profile = profileRes.data?.data;
-      if (profile) {
-        setPatientName(profile.name || user.username);
-        // If patient model doesn't have NIC/Phone, we just fill the name
-      } else {
-        setPatientName(user.username);
-      }
-    } catch (err) {
-      setPatientName(user.username);
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
-
-  const handleBook = async () => {
+  const handleContinue = () => {
+    if (!selectedSession) return;
     if (!user) {
       navigate('/login', { state: { from: window.location.pathname } });
       return;
     }
-    if (user.role !== 'patient') {
-      setError("Only patients can book appointments.");
-      return;
-    }
-    if (!selectedSession) return;
-    if (!patientName || !patientNIC || !patientPhone) {
-        setError("Please fill in all patient details.");
-        return;
-    }
-
-    setBooking(true);
-    setError('');
-    try {
-      const res = await appointmentAPI.book({
-        sessionId: selectedSession._id,
-        reasonForVisit: reason || "General Consultation",
-        patientName,
-        patientNIC,
-        patientPhone
-      });
-      setSuccess(res.data?.data); // Store the appointment object
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) {
-        console.error("Booking Error:", err);
-      setError(err?.response?.data?.message || "Failed to book appointment.");
-    } finally {
-      setBooking(false);
-    }
+    navigate(`/confirm-booking/${doctorId}/${selectedSession._id}`);
   };
 
   if (loading) {
@@ -151,217 +97,145 @@ const BookingPage = () => {
       <div className="pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {success ? (
-            <BookingSuccess appointment={success} doctor={doctor} />
-          ) : (
-            <div className="grid lg:grid-cols-12 gap-12 items-start">
-              
-              {/* Left Column: Doctor Info */}
-              <div className="lg:col-span-5 space-y-8">
-                <button 
-                  onClick={() => navigate(-1)} 
-                  className="flex items-center gap-2 text-gray-400 font-bold hover:text-gray-900 transition-colors uppercase text-xs tracking-widest"
-                >
-                  <Icon path={icons.chevronLeft} size={14} />
-                  Back
-                </button>
+          <div className="grid lg:grid-cols-12 gap-12 items-start">
+            
+            {/* Left Column: Doctor Info */}
+            <div className="lg:col-span-5 space-y-8">
+              <button 
+                onClick={() => navigate(-1)} 
+                className="flex items-center gap-2 text-gray-400 font-bold hover:text-gray-900 transition-colors uppercase text-xs tracking-widest"
+              >
+                <Icon path={icons.chevronLeft} size={14} />
+                Back
+              </button>
 
-                <div className="bg-white border border-gray-100 rounded-[3rem] p-8 md:p-10 shadow-xl shadow-gray-100/50">
-                  <div className="flex items-center gap-6 mb-10">
-                    <div className="w-24 h-24 bg-gray-50 rounded-[2rem] overflow-hidden shrink-0 border-4 border-white shadow-lg">
-                       <img
-                         src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${doctor.userId}&backgroundColor=b6e3f4`}
-                         alt={doctor.firstName}
-                         className="w-full h-full object-cover"
-                       />
+              <div className="bg-white border border-gray-100 rounded-[3rem] p-8 md:p-10 shadow-xl shadow-gray-100/50">
+                <div className="flex items-center gap-6 mb-10">
+                  <div className="w-24 h-24 bg-gray-50 rounded-[2rem] overflow-hidden shrink-0 border-4 border-white shadow-lg">
+                     <img
+                       src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${doctor.userId}&backgroundColor=b6e3f4`}
+                       alt={doctor.firstName}
+                       className="w-full h-full object-cover"
+                     />
+                  </div>
+                  <div>
+                    <span className="inline-block px-3 py-1 bg-gray-900 text-white text-[10px] font-bold rounded-full uppercase tracking-tighter mb-2">{doctor.specialty}</span>
+                    <h1 className="text-3xl font-extrabold text-gray-900 leading-tight">Dr. {doctor.firstName} {doctor.lastName}</h1>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 shrink-0">
+                      <Icon path={icons.user} size={18} />
                     </div>
                     <div>
-                      <span className="inline-block px-3 py-1 bg-gray-900 text-white text-[10px] font-bold rounded-full uppercase tracking-tighter mb-2">{doctor.specialty}</span>
-                      <h1 className="text-3xl font-extrabold text-gray-900 leading-tight">Dr. {doctor.firstName} {doctor.lastName}</h1>
+                      <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Experience</p>
+                      <p className="text-gray-900 font-bold">{doctor.experienceYears}+ Years in Practice</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 shrink-0">
+                      <Icon path={icons.info} size={18} />
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Consultation Fee</p>
+                      <p className="text-gray-900 font-bold text-xl">${doctor.consultationFee}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 shrink-0">
-                        <Icon path={icons.user} size={18} />
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Experience</p>
-                        <p className="text-gray-900 font-bold">{doctor.experienceYears}+ Years in Practice</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 shrink-0">
-                        <Icon path={icons.info} size={18} />
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Consultation Fee</p>
-                        <p className="text-gray-900 font-bold text-xl">${doctor.consultationFee}</p>
-                      </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-gray-50">
-                       <p className="text-gray-500 font-medium leading-relaxed">
-                         Dr. {doctor.firstName} is a highly regarded specialist in {doctor.specialty} with a focus on patient-centered care and modern diagnostic techniques.
-                       </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
-                  <div className="relative z-10">
-                    <h3 className="text-xl font-bold mb-4">Patient Reviews</h3>
-                    <div className="flex items-center gap-2 mb-6">
-                       <div className="flex text-white">
-                         {[1,2,3,4,5].map(n => <Icon key={n} path={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>} size={14} className="fill-current" />)}
-                       </div>
-                       <span className="text-sm font-bold">4.9/5 (120+ reviews)</span>
-                    </div>
-                    <p className="text-white/60 text-sm font-medium italic">"Excellent consultation, very professional and empathetic. Highly recommended!"</p>
+                  <div className="pt-6 border-t border-gray-50">
+                     <p className="text-gray-500 font-medium leading-relaxed">
+                       Dr. {doctor.firstName} is a highly regarded specialist in {doctor.specialty} with a focus on patient-centered care and modern diagnostic techniques.
+                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Sessions & Booking */}
-              <div className="lg:col-span-7 space-y-8">
-                <div>
-                  <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Available Sessions</h2>
-                  <p className="text-gray-500 font-medium">Select a time slot that works best for you.</p>
-                </div>
-
-                {sessions.length > 0 ? (
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {sessions.map((sess) => (
-                      <button
-                        key={sess._id}
-                        onClick={() => setSelectedSession(sess)}
-                        className={`text-left p-6 rounded-[2.2rem] border-2 transition-all ${
-                          selectedSession?._id === sess._id 
-                            ? 'bg-gray-900 border-gray-900 text-white shadow-xl shadow-gray-300' 
-                            : 'bg-white border-gray-100 hover:border-gray-900 text-gray-900'
-                        }`}
-                      >
-                         <div className="flex items-center justify-between mb-4">
-                            <div className={`p-2 rounded-xl ${selectedSession?._id === sess._id ? 'bg-white/10' : 'bg-gray-50'}`}>
-                              <Icon path={icons.calendar} size={18} />
-                            </div>
-                            {selectedSession?._id === sess._id && <Icon path={icons.check} size={18} />}
-                         </div>
-                         <p className={`text-sm font-bold uppercase tracking-tighter mb-1 ${selectedSession?._id === sess._id ? 'text-white/60' : 'text-gray-400'}`}>
-                           {new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                         </p>
-                         <p className="text-xl font-extrabold">{sess.startTime} – {sess.endTime}</p>
-                         <div className="mt-4 flex items-center justify-between">
-                            <span className={`text-[10px] font-bold uppercase tracking-widest ${selectedSession?._id === sess._id ? 'text-white/40' : 'text-gray-300'}`}>Availability</span>
-                            <span className="text-xs font-bold">{sess.maxAppointments - sess.currentAppointmentsCount} slots left</span>
-                         </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-white border border-gray-100 rounded-[3rem] p-16 text-center shadow-sm">
-                     <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300 mx-auto mb-6">
-                       <Icon path={icons.alert} size={28} />
+              <div className="bg-gray-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+                <div className="relative z-10">
+                  <h3 className="text-xl font-bold mb-4">Patient Reviews</h3>
+                  <div className="flex items-center gap-2 mb-6">
+                     <div className="flex text-white">
+                       {[1,2,3,4,5].map(n => <Icon key={n} path={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>} size={14} className="fill-current" />)}
                      </div>
-                     <h3 className="text-xl font-extrabold text-gray-900 mb-2">No active sessions</h3>
-                     <p className="text-gray-500 font-medium">This doctor doesn't have any available time slots at the moment. Please check back later.</p>
+                     <span className="text-sm font-bold">4.9/5 (120+ reviews)</span>
                   </div>
-                )}
+                  <p className="text-white/60 text-sm font-medium italic">"Excellent consultation, very professional and empathetic. Highly recommended!"</p>
+                </div>
+              </div>
+            </div>
 
-                {selectedSession && (
-                  <div className="bg-white border border-gray-100 rounded-[3rem] p-10 shadow-2xl shadow-gray-100 animate-in slide-in-from-bottom-6 duration-500">
-                    <div className="flex items-center justify-between mb-8">
-                      <h3 className="text-2xl font-extrabold text-gray-900">Confirm Appointment</h3>
-                      <button 
-                        onClick={fillSelfDetails}
-                        disabled={loadingProfile}
-                        className="text-[10px] font-black text-gray-400 hover:text-gray-900 transition-all uppercase tracking-[0.2em] bg-gray-50 px-4 py-2 rounded-full border border-gray-100"
-                      >
-                        {loadingProfile ? 'Fetching...' : 'Use My Details'}
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-8">
-                       <div className="grid sm:grid-cols-2 gap-6">
-                         <div className="space-y-2">
-                           <label className="block text-gray-400 text-[10px] font-bold uppercase tracking-widest ml-1">Patient's Full Name</label>
-                           <div className="relative group">
-                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-300 group-focus-within:text-gray-900 transition-colors">
-                               <Icon path={icons.user} size={16} />
-                             </div>
-                             <input
-                               type="text"
-                               placeholder="Full name of the person visiting"
-                               value={patientName}
-                               onChange={(e) => setPatientName(e.target.value)}
-                               className="w-full pl-11 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-900 font-semibold focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:bg-white focus:border-gray-900 transition-all placeholder:text-gray-300 placeholder:font-medium"
-                             />
-                           </div>
-                         </div>
-
-                         <div className="space-y-2">
-                           <label className="block text-gray-400 text-[10px] font-bold uppercase tracking-widest ml-1">National ID (NIC)</label>
-                           <input
-                             type="text"
-                             placeholder="Identity card number"
-                             value={patientNIC}
-                             onChange={(e) => setPatientNIC(e.target.value)}
-                             className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-900 font-semibold focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:bg-white focus:border-gray-900 transition-all placeholder:text-gray-300 placeholder:font-medium"
-                           />
-                         </div>
-
-                         <div className="sm:col-span-2 space-y-2">
-                           <label className="block text-gray-400 text-[10px] font-bold uppercase tracking-widest ml-1">Contact Phone Number</label>
-                           <input
-                             type="tel"
-                             placeholder="Active phone number for updates"
-                             value={patientPhone}
-                             onChange={(e) => setPatientPhone(e.target.value)}
-                             className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-900 font-semibold focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:bg-white focus:border-gray-900 transition-all placeholder:text-gray-300 placeholder:font-medium"
-                           />
-                         </div>
-                       </div>
-
-                       <div className="space-y-2 pt-2">
-                         <label className="block text-gray-400 text-[10px] font-bold uppercase tracking-widest ml-1">Reason for visit (Optional)</label>
-                         <textarea
-                           placeholder="Briefly describe the health concern or purpose of visit..."
-                           value={reason}
-                           onChange={(e) => setReason(e.target.value)}
-                           className="w-full p-5 bg-gray-50 border border-gray-100 rounded-3xl text-gray-900 font-semibold focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:bg-white focus:border-gray-900 transition-all h-32 placeholder:text-gray-300 placeholder:font-medium"
-                         />
-                       </div>
-
-                       {error && (
-                         <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600">
-                            <Icon path={icons.alert} size={18} />
-                            <p className="text-sm font-bold">{error}</p>
-                         </div>
-                       )}
-
-                       <button
-                         onClick={handleBook}
-                         disabled={booking}
-                         className="w-full py-5 bg-gray-900 text-white font-bold rounded-3xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-                       >
-                         {booking ? 'Scheduling...' : `Confirm Booking for ${selectedSession.startTime}`}
-                       </button>
-
-                       {!user && (
-                         <p className="text-center text-gray-400 text-sm font-medium">
-                           You need to <Link to="/login" className="text-gray-900 font-bold hover:underline">log in</Link> as a patient to complete this booking.
-                         </p>
-                       )}
-                    </div>
-                  </div>
-                )}
+            {/* Right Column: Sessions & Booking */}
+            <div className="lg:col-span-7 space-y-8">
+              <div>
+                <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Available Sessions</h2>
+                <p className="text-gray-500 font-medium">Select a time slot that works best for you.</p>
               </div>
 
+              {sessions.length > 0 ? (
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {sessions.map((sess) => (
+                    <button
+                      key={sess._id}
+                      onClick={() => setSelectedSession(sess)}
+                      className={`text-left p-6 rounded-[2.2rem] border-2 transition-all ${
+                        selectedSession?._id === sess._id 
+                          ? 'bg-gray-900 border-gray-900 text-white shadow-xl shadow-gray-300' 
+                          : 'bg-white border-gray-100 hover:border-gray-900 text-gray-900'
+                      }`}
+                    >
+                       <div className="flex items-center justify-between mb-4">
+                          <div className={`p-2 rounded-xl ${selectedSession?._id === sess._id ? 'bg-white/10' : 'bg-gray-50'}`}>
+                            <Icon path={icons.calendar} size={18} />
+                          </div>
+                          {selectedSession?._id === sess._id && <Icon path={icons.check} size={18} />}
+                       </div>
+                       <p className={`text-sm font-bold uppercase tracking-tighter mb-1 ${selectedSession?._id === sess._id ? 'text-white/60' : 'text-gray-400'}`}>
+                         {new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                       </p>
+                       <p className="text-xl font-extrabold">{sess.startTime} – {sess.endTime}</p>
+                       <div className="mt-4 flex items-center justify-between">
+                          <span className={`text-[10px] font-bold uppercase tracking-widest ${selectedSession?._id === sess._id ? 'text-white/40' : 'text-gray-300'}`}>Availability</span>
+                          <span className="text-xs font-bold">{sess.maxAppointments - sess.currentAppointmentsCount} slots left</span>
+                       </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white border border-gray-100 rounded-[3rem] p-16 text-center shadow-sm">
+                   <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300 mx-auto mb-6">
+                     <Icon path={icons.alert} size={28} />
+                   </div>
+                   <h3 className="text-xl font-extrabold text-gray-900 mb-2">No active sessions</h3>
+                   <p className="text-gray-500 font-medium">This doctor doesn't have any available time slots at the moment. Please check back later.</p>
+                </div>
+              )}
+
+              {selectedSession && (
+                <div className="pt-8 border-t border-gray-100 flex flex-col items-center gap-8 animate-in slide-in-from-bottom-8 duration-700">
+                  <div className="flex items-center gap-4 text-gray-500 w-full bg-indigo-50/50 p-6 rounded-[2rem] border border-indigo-100/50">
+                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm shrink-0">
+                      <Icon path={icons.info} size={24} />
+                    </div>
+                    <p className="font-medium text-sm leading-relaxed">
+                      Session Selected: <span className="text-gray-900 font-black">{selectedSession.startTime} – {selectedSession.endTime}</span>. 
+                      Proceed to the next step to finalize your appointment details.
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={handleContinue}
+                    className="w-full py-6 bg-gray-900 text-white font-black rounded-[2.5rem] hover:bg-gray-800 transition-all shadow-2xl shadow-gray-200 text-xl tracking-tight active:scale-[0.98] duration-200"
+                  >
+                    Continue to Booking Details
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
         </div>
       </div>

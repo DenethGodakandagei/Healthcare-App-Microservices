@@ -2,6 +2,18 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { patientAPI, appointmentAPI } from '../../services/api';
+import doc1 from '../../assets/doc1.png';
+import doc2 from '../../assets/doc2.png';
+import doc3 from '../../assets/doc3.png';
+import doc4 from '../../assets/doc4.png';
+
+const doctorImages = [doc1, doc2, doc3, doc4];
+
+const getDoctorImage = (id) => {
+  if (!id) return doc1;
+  const index = Math.abs(id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % doctorImages.length;
+  return doctorImages[index];
+};
 
 const Icon = ({ path, size = 20 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -38,6 +50,8 @@ const StatCard = ({ label, value, sub, icon }) => (
   </div>
 );
 
+
+
 const AppointmentCard = ({ apt, onCancel }) => {
   const date = new Date(apt.date || apt.scheduledAt || apt.createdAt);
   const statusConfig = {
@@ -51,8 +65,12 @@ const AppointmentCard = ({ apt, onCancel }) => {
   return (
     <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:shadow-sm transition-shadow">
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500">
-          <Icon path={icons.calendar} size={16} />
+        <div className="w-12 h-12 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
+           <img
+             src={getDoctorImage(apt.doctorId || apt.doctor?._id || apt._id)}
+             alt="Doctor"
+             className="w-full h-full object-cover"
+           />
         </div>
         <div>
           <p className="text-gray-900 text-sm font-semibold">Dr. {apt.doctorName || apt.doctor?.name || 'Unknown'}</p>
@@ -215,8 +233,9 @@ const PatientDashboard = () => {
               {activeTab === 'overview' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-gray-900 text-xl font-bold">
-                      Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.username || 'Patient'} 👋
+                    <h2 className="text-gray-900 text-xl font-bold flex items-center gap-2">
+                       <div className="text-emerald-500"><Icon path={<><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 7a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 0-2h-3V8a1 1 0 0 0-1-1z"/></>} size={20} /></div>
+                       Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.username || 'Patient'}
                     </h2>
                     <p className="text-gray-500 text-sm mt-1">Here&apos;s your health summary for today.</p>
                   </div>
