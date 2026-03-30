@@ -2,7 +2,7 @@
 
 * {
   font-family: 'Open Sans', sans-serif;
-  font-weight: 400; /* Using 400 as standard light-ish weight for readability */
+  font-weight: 400;
   box-sizing: border-box;
   letter-spacing: -0.01em;
 }
@@ -22,6 +22,15 @@ body {
   padding: 0;
   background: #f5f5f5;
   color: #111;
+}
+
+@keyframes dash {
+  from { stroke-dashoffset: 280; }
+  to { stroke-dashoffset: 140; }
+}
+
+.animate-\[dash_2s_ease-out_forwards\] {
+  animation: dash 2s ease-out forwards;
 }
 
 ::-webkit-scrollbar {
