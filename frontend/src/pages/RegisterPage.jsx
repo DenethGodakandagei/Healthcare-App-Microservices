@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { doctorAPI } from '../services/api';
 
 const EyeIcon = ({ open }) => open ? (
   <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,7 +35,18 @@ const RegisterPage = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    username: '', email: '', password: '', confirmPassword: '', role: 'patient'
+    username: '', 
+    email: '', 
+    password: '', 
+    confirmPassword: '', 
+    role: 'patient',
+    // Doctor fields
+    firstName: '',
+    lastName: '',
+    specialty: '',
+    experienceYears: '',
+    contactNumber: '',
+    consultationFee: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -49,11 +61,17 @@ const RegisterPage = () => {
   };
 
   const validate = () => {
-    if (!form.username || !form.email || !form.password || !form.confirmPassword) return 'All fields are required.';
+    if (!form.username || !form.email || !form.password || !form.confirmPassword) return 'Auth fields are required.';
     if (form.username.length < 3) return 'Username must be at least 3 characters.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Enter a valid email address.';
     if (form.password.length < 8) return 'Password must be at least 8 characters.';
     if (form.password !== form.confirmPassword) return 'Passwords do not match.';
+    
+    if (form.role === 'doctor') {
+      if (!form.firstName || !form.lastName || !form.specialty || !form.experienceYears || !form.contactNumber || !form.consultationFee) {
+        return 'All doctor profile fields are required.';
+      }
+    }
     return null;
   };
 
@@ -63,7 +81,27 @@ const RegisterPage = () => {
     if (err) { setError(err); return; }
     setLoading(true);
     try {
-      const user = await register({ username: form.username, email: form.email, password: form.password, role: form.role });
+      // 1. Sign up Identity
+      const user = await register({ 
+        username: form.username, 
+        email: form.email, 
+        password: form.password, 
+        role: form.role 
+      });
+
+      // 2. If doctor, create Doctor Profile
+      if (user.role === 'doctor') {
+        await doctorAPI.createProfile({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          specialty: form.specialty,
+          experienceYears: Number(form.experienceYears),
+          contactNumber: form.contactNumber,
+          consultationFee: Number(form.consultationFee),
+          availability: [] // Default empty
+        });
+      }
+
       navigate(user.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -178,6 +216,39 @@ const RegisterPage = () => {
                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all"
               />
             </div>
+
+            {form.role === 'doctor' && (
+              <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-1.5">First Name</label>
+                    <input name="firstName" value={form.firstName} onChange={handleChange} placeholder="John" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 text-sm focus:outline-none focus:border-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-1.5">Last Name</label>
+                    <input name="lastName" value={form.lastName} onChange={handleChange} placeholder="Doe" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 text-sm focus:outline-none focus:border-gray-900" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-1.5">Specialty</label>
+                  <input name="specialty" value={form.specialty} onChange={handleChange} placeholder="Cardiology" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 text-sm focus:outline-none focus:border-gray-900" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-1.5">Years Exp.</label>
+                    <input name="experienceYears" type="number" value={form.experienceYears} onChange={handleChange} placeholder="5" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 text-sm focus:outline-none focus:border-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-1.5">Consult. Fee ($)</label>
+                    <input name="consultationFee" type="number" value={form.consultationFee} onChange={handleChange} placeholder="50" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 text-sm focus:outline-none focus:border-gray-900" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-gray-600 text-[10px] font-bold uppercase tracking-widest mb-1.5">Contact Number</label>
+                  <input name="contactNumber" value={form.contactNumber} onChange={handleChange} placeholder="+1 (555) 000-0000" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 text-sm focus:outline-none focus:border-gray-900" />
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-gray-600 text-xs font-semibold uppercase tracking-widest mb-2">Password</label>

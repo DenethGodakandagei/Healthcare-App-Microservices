@@ -56,7 +56,10 @@ const AppointmentCard = ({ apt, onCancel }) => {
         </div>
         <div>
           <p className="text-gray-900 text-sm font-semibold">Dr. {apt.doctorName || apt.doctor?.name || 'Unknown'}</p>
-          <p className="text-gray-500 text-xs mt-0.5">{apt.specialty || 'General Physician'} · {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+          <div className="flex flex-col gap-0.5 mt-0.5">
+            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-tight">Patient: <span className="text-gray-900">{apt.patientName || 'Self'}</span></p>
+            <p className="text-gray-500 text-xs">{apt.specialty || 'General Physician'} · {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+          </div>
         </div>
       </div>
       <div className="flex items-center gap-3">

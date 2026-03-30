@@ -62,10 +62,15 @@ const AppointmentRow = ({ apt, onAccept, onComplete }) => {
         </div>
         <div>
           <p className="text-gray-900 text-sm font-semibold">{apt.patientName || apt.patient?.username || 'Unknown Patient'}</p>
-          <p className="text-gray-400 text-xs mt-0.5">
+          <div className="flex gap-2 mt-0.5 mt-1">
+            <span className="text-gray-400 text-[10px] uppercase font-bold tracking-tighter bg-gray-100 px-1.5 py-0.5 rounded">NIC: {apt.patientNIC || '—'}</span>
+            <span className="text-gray-400 text-[10px] uppercase font-bold tracking-tighter bg-gray-100 px-1.5 py-0.5 rounded">TEL: {apt.patientPhone || '—'}</span>
+          </div>
+          <p className="text-gray-400 text-xs mt-1">
             {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             {!isNaN(date) && ` · ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
           </p>
+          {apt.reasonForVisit && <p className="text-gray-500 text-[11px] italic mt-1.5 border-l-2 border-gray-100 pl-2">"{apt.reasonForVisit}"</p>}
         </div>
       </div>
       <div className="flex items-center gap-2">

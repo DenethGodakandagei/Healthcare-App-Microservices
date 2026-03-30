@@ -25,7 +25,10 @@ export const patientAPI = {
 
 // Doctor endpoints
 export const doctorAPI = {
+  getAll: () => API.get('/doctors'),
+  getById: (id) => API.get(`/doctors/${id}`),
   getProfile: () => API.get('/doctors/profile'),
+  createProfile: (data) => API.post('/doctors/profile', data),
   updateProfile: (data) => API.put('/doctors/profile', data),
   getAppointments: () => API.get('/appointments/doctor'),
 };

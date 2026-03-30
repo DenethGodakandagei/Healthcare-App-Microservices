@@ -16,6 +16,29 @@ app.use('/api/auth', createProxyMiddleware({
   changeOrigin: true 
 }));
 
+// Proxy GET /api/doctors before authMiddleware to make it public
+app.use('/api/doctors', (req, res, next) => {
+  // Allow public GET for root and specific doctor IDs (not /profile)
+  if (req.method === 'GET' && (req.path === '/' || (req.path !== '/profile' && req.path.length > 1))) {
+    return createProxyMiddleware({ 
+      target: (process.env.DOCTOR_SERVICE_URL || 'http://localhost:4003') + '/api/doctors', 
+      changeOrigin: true 
+    })(req, res, next);
+  }
+  next();
+});
+
+// Proxy GET /api/appointments/sessions before authMiddleware to make it public
+app.use('/api/appointments/sessions', (req, res, next) => {
+  if (req.method === 'GET') {
+    return createProxyMiddleware({ 
+      target: (process.env.APPOINTMENT_SERVICE_URL || 'http://localhost:4002') + '/api/appointments/sessions', 
+      changeOrigin: true 
+    })(req, res, next);
+  }
+  next();
+});
+
 // Protected routes (apply authMiddleware to all routes below)
 app.use(authMiddleware);
 
