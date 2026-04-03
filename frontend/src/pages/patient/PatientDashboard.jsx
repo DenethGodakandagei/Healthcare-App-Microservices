@@ -626,14 +626,17 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
                 }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold ${apt.onlineStatus === 'approved' ? 'bg-gradient-to-br from-green-400 to-emerald-600' :
-                        apt.onlineStatus === 'declined' ? 'bg-gray-300' : 'bg-gradient-to-br from-yellow-400 to-orange-500'
-                      }`}>
-                      <Icon path={icons.video} size={16} />
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+                      <img
+                        src={getDoctorImage(doctorId || '')}
+                        alt={doctorName}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div>
                       <p className="text-gray-900 text-sm font-semibold">{doctorName}</p>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-cyan-600 text-[11px] font-semibold uppercase tracking-wider">{doctor?.specialty || 'General'}</p>
+                      <p className="text-gray-400 text-xs mt-0.5">
                         {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                         {apt.startTime && ` · ${apt.startTime} - ${apt.endTime}`}
                       </p>
@@ -666,35 +669,76 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
 
       {/* Step 1: Select Doctor */}
       {step === 'doctors' && (
-        <div className="space-y-3">
-          <h3 className="text-gray-900 font-semibold text-sm">Book New Online Consultation</h3>
-          <p className="text-gray-400 text-xs">Select a doctor for your video consultation</p>
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-gray-900 font-semibold text-base">Book New Online Consultation</h3>
+            <p className="text-gray-400 text-xs mt-0.5">Select a doctor for your video consultation</p>
+          </div>
           {doctors.length === 0 ? (
             <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center">
-              <p className="text-gray-500 text-sm">No doctors available at the moment</p>
+              <div className="text-gray-300 flex justify-center mb-3"><Icon path={icons.video} size={36} /></div>
+              <p className="text-gray-600 text-sm font-medium">No doctors available at the moment</p>
+              <p className="text-gray-400 text-xs mt-1">Please check back later</p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-3">
-              {doctors.map(doc => (
-                <button
-                  key={doc._id}
-                  onClick={() => handleSelectDoctor(doc)}
-                  className="text-left bg-white border border-gray-200 rounded-2xl p-4 hover:border-cyan-300 hover:shadow-sm transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold">
-                      {(doc.firstName || 'D')[0].toUpperCase()}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {doctors.map(doc => {
+                const availDays = (doc.availability || []).map(a => a.day?.slice(0, 3)).join(', ') || 'Not set';
+                return (
+                  <button
+                    key={doc._id}
+                    onClick={() => handleSelectDoctor(doc)}
+                    className="text-left bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-50 transition-all group"
+                  >
+                    {/* Doctor Image + Badge */}
+                    <div className="relative">
+                      <div className="w-full h-36 bg-gradient-to-br from-slate-50 to-gray-100 overflow-hidden">
+                        <img
+                          src={getDoctorImage(doc._id)}
+                          alt={`Dr. ${doc.firstName} ${doc.lastName}`}
+                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      {/* Online badge */}
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full border border-green-100">
+                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Online</span>
+                      </div>
+                      {/* Fee badge */}
+                      <div className="absolute top-3 right-3 px-2.5 py-1 bg-gray-900/80 backdrop-blur-sm rounded-full">
+                        <span className="text-[11px] font-bold text-white">${doc.consultationFee || '—'}</span>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-gray-900 font-semibold text-sm truncate">Dr. {doc.firstName} {doc.lastName}</p>
-                      <p className="text-gray-400 text-xs">{doc.specialty}</p>
+
+                    {/* Doctor Info */}
+                    <div className="p-4">
+                      <h4 className="text-gray-900 font-bold text-sm truncate">Dr. {doc.firstName} {doc.lastName}</h4>
+                      <p className="text-cyan-600 text-xs font-semibold uppercase tracking-wider mt-0.5">{doc.specialty}</p>
+
+                      {/* Stats row */}
+                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-1.5">
+                          <div className="text-gray-400"><Icon path={icons.activity} size={12} /></div>
+                          <span className="text-[11px] font-bold text-gray-600">{doc.experienceYears || 0}+ yrs</span>
+                        </div>
+                        <div className="w-px h-3 bg-gray-200" />
+                        <div className="flex items-center gap-1.5">
+                          <div className="text-gray-400"><Icon path={icons.clock} size={12} /></div>
+                          <span className="text-[11px] font-medium text-gray-500 truncate">{availDays}</span>
+                        </div>
+                      </div>
+
+                      {/* CTA */}
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-[11px] text-gray-400 font-medium">View available slots</span>
+                        <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 group-hover:bg-cyan-500 group-hover:text-white transition-all">
+                          <Icon path={icons.chevronRight} size={14} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-gray-300 group-hover:text-cyan-500 transition-colors">
-                      <Icon path={icons.chevronRight} size={16} />
-                    </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -703,13 +747,22 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
       {/* Step 2: Select Time Slot */}
       {step === 'sessions' && selectedDoctor && (
         <div className="space-y-4">
-          <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold">
-              {(selectedDoctor.firstName || 'D')[0].toUpperCase()}
+          <div className="bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-xl overflow-hidden border border-gray-100 shrink-0">
+              <img
+                src={getDoctorImage(selectedDoctor._id)}
+                alt={`Dr. ${selectedDoctor.firstName} ${selectedDoctor.lastName}`}
+                className="w-full h-full object-cover"
+              />
             </div>
-            <div>
-              <p className="text-gray-900 font-semibold text-sm">Dr. {selectedDoctor.firstName} {selectedDoctor.lastName}</p>
-              <p className="text-gray-400 text-xs">{selectedDoctor.specialty} · ${selectedDoctor.consultationFee || '—'}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-900 font-bold text-sm">Dr. {selectedDoctor.firstName} {selectedDoctor.lastName}</p>
+              <p className="text-cyan-600 text-xs font-semibold uppercase tracking-wider">{selectedDoctor.specialty}</p>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-[11px] text-gray-500 font-medium">{selectedDoctor.experienceYears || 0}+ yrs experience</span>
+                <span className="text-[11px] text-gray-400">·</span>
+                <span className="text-[11px] font-bold text-gray-700">${selectedDoctor.consultationFee || '—'}</span>
+              </div>
             </div>
           </div>
 
