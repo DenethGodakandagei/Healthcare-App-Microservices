@@ -17,31 +17,25 @@ const Footer = () => {
           {/* Left Section: Logo & CTA */}
           <div className="space-y-10">
             <Link to="/" className="inline-block group">
-              <span className="text-7xl md:text-8xl font-black text-gray-900 tracking-tighter hover:text-gray-800 transition-colors">
-                ApexEHR
+              <span className="text-8xl md:text-[12rem] font-light text-black tracking-tighter hover:text-black/70 transition-all duration-700 leading-none">
+                BioGrid
               </span>
             </Link>
             
-            <div className="space-y-6">
-              <p className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em]">
-                Experience the Future of Healthcare with ApexEHR
+            <div className="space-y-8">
+              <p className="text-[11px] font-light text-black/40 uppercase tracking-[0.4em]">
+                The future of healthcare infrastructure.
               </p>
               
-              <div className="flex flex-wrap items-center gap-6">
+              <div className="flex flex-wrap items-center gap-8">
                 <Link
                   to="/register"
-                  className="flex items-center gap-3 px-8 py-4 bg-gray-900 text-white font-black rounded-full hover:bg-gray-800 transition-all shadow-2xl shadow-gray-900/10 active:scale-95 group"
+                  className="h-14 px-10 bg-black text-white font-medium rounded-2xl hover:bg-black/90 transition-all active:scale-95 flex items-center justify-center tracking-widest text-[10px] uppercase"
                 >
-                  <div className="w-6 h-6 bg-white text-gray-900 rounded-full flex items-center justify-center transition-transform group-hover:translate-x-1">
-                    <Icon path={<polyline points="9 18 15 12 9 6" />} size={12} />
-                  </div>
                   Get started
                 </Link>
                 
-                <button className="flex items-center gap-3 text-[12px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors group">
-                  <div className="w-5 h-5 flex items-center justify-center text-gray-300 group-hover:text-blue-500 transition-colors">
-                    <Icon path={<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />} size={14} />
-                  </div>
+                <button className="text-[10px] font-light uppercase tracking-[0.3em] text-black/40 hover:text-black transition-colors">
                   Request a demo
                 </button>
               </div>
@@ -54,12 +48,12 @@ const Footer = () => {
             {/* Quick Links */}
             <div>
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 mb-8">Quick Links</h4>
-              <ul className="space-y-5">
-                {['Home', 'Features', 'Pricing', 'Contact'].map((item) => (
+              <ul className="space-y-4">
+                {['Home', 'Doctors', 'Features', 'Pricing', 'Contact'].map((item) => (
                   <li key={item}>
                     <Link 
-                      to={item === 'Home' || item === 'Contact' ? '/' : `/${item.toLowerCase()}`} 
-                      className="text-base font-bold text-gray-600 hover:text-gray-900 transition-colors"
+                      to={item === 'Home' ? '/' : `/${item.toLowerCase()}`} 
+                      className="text-sm font-light text-black/50 hover:text-black transition-colors"
                     >
                       {item}
                     </Link>
@@ -70,16 +64,16 @@ const Footer = () => {
 
             {/* Contacts */}
             <div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 mb-8">Contacts</h4>
-              <ul className="space-y-5 text-base font-bold text-gray-600">
+              <h4 className="text-[10px] font-medium uppercase tracking-[0.3em] text-black/20 mb-10">Contacts</h4>
+              <ul className="space-y-5 text-sm font-light text-black/50">
                 <li className="leading-relaxed">
                   1-6-2 Misuji, Taito-ku<br />
                   Tokyo 111-0055
                 </li>
                 <li>+9 999 999 999</li>
                 <li>
-                  <a href="mailto:apex@gmail.com" className="hover:text-gray-900 transition-colors">
-                    apex@gmail.com
+                  <a href="mailto:hello@biogrid.com" className="hover:text-black transition-colors">
+                    hello@biogrid.com
                   </a>
                 </li>
               </ul>
@@ -87,7 +81,7 @@ const Footer = () => {
 
             {/* Social */}
             <div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 mb-8">Social</h4>
+              <h4 className="text-[12px] font-medium uppercase tracking-[0.4em] text-black/30 mb-12">Connect</h4>
               <div className="flex items-center gap-4">
                 {[
                   { name: 'facebook', path: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /> },
@@ -110,12 +104,12 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="pt-12 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex gap-10">
-            <Link to="/terms" className="text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors">Terms of use</Link>
-            <Link to="/privacy" className="text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors">Privacy Policy</Link>
+          <div className="flex gap-12">
+            <Link to="/terms" className="text-[12px] font-light text-black/40 hover:text-black transition-colors tracking-[0.3em] uppercase">Terms</Link>
+            <Link to="/privacy" className="text-[12px] font-light text-black/40 hover:text-black transition-colors tracking-[0.3em] uppercase">Privacy</Link>
           </div>
-          <p className="text-xs font-bold text-gray-400">
-            © ApexEHR All Rights Reserved {currentYear}
+          <p className="text-[12px] font-light text-black/40 tracking-[0.3em] uppercase">
+            © BioGrid {currentYear}
           </p>
         </div>
       </div>

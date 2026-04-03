@@ -40,6 +40,7 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
+    { name: 'Doctors', path: '/doctors' },
     { name: 'Features', path: '/features' },
     { name: 'Pricing', path: '/pricing' },
     { name: 'Contact', path: '/contact' },
@@ -49,29 +50,29 @@ const Navbar = () => {
   const isHeroMode = location.pathname === '/' && !isScrolled;
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm py-4' : 'bg-transparent py-6'
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ${isScrolled ? 'py-4' : 'py-8'
       }`}>
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-500 ${isHeroMode ? 'bg-white/10 text-white backdrop-blur' : 'bg-gray-900 text-white shadow-lg'
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all duration-700 ${isHeroMode ? 'bg-white/5 text-white backdrop-blur-sm' : 'bg-black/5 text-black'
               }`}>
-              <Icon path={icons.plus} size={18} />
+              <Icon path={icons.plus} size={20} />
             </div>
-            <span className={`font-black text-xl tracking-tighter transition-colors duration-500 ${isHeroMode ? 'text-white/90' : 'text-gray-900'
+            <span className={`font-semibold text-2xl tracking-tight transition-colors duration-700 ${isHeroMode ? 'text-white drop-shadow-md' : 'text-black/90'
               }`}>ApexEHR</span>
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-10">
+          <div className="hidden md:flex items-center gap-12">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`text-[13px] font-bold tracking-tight transition-all duration-300 ${isHeroMode
-                    ? 'text-white/60 hover:text-white'
-                    : (location.pathname === link.path ? 'text-gray-900' : 'text-gray-400 hover:text-gray-900')
+                className={`text-[15px] font-semibold tracking-wide transition-all duration-500 ${isHeroMode
+                    ? 'text-white hover:text-white/80 [text-shadow:_0_1px_4px_rgba(0,0,0,0.4)]'
+                    : (location.pathname === link.path ? 'text-black font-semibold' : 'text-black/60 hover:text-black')
                   }`}
               >
                 {link.name}
@@ -80,11 +81,10 @@ const Navbar = () => {
           </div>
 
           {/* User Actions */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-8">
             {!user && (
-              <Link to="/demo" className={`flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest transition-all duration-300 ${isHeroMode ? 'text-white/60 hover:text-white' : 'text-gray-400 hover:text-gray-900'
+              <Link to="/demo" className={`flex items-center gap-2 text-[11px] font-light uppercase tracking-[0.2em] transition-all duration-500 ${isHeroMode ? 'text-white/40 hover:text-white/90' : 'text-black/30 hover:text-black'
                 }`}>
-                <Icon path={<><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></>} size={14} />
                 Request a demo
               </Link>
             )}
@@ -93,11 +93,11 @@ const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className={`flex items-center gap-2 pl-2 pr-1 py-1 rounded-full border transition-all duration-300 ${isHeroMode ? 'border-white/20 bg-white/5 hover:bg-white/10' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  className={`flex items-center gap-3 pl-3 pr-1.5 py-1.5 rounded-2xl transition-all duration-500 ${isHeroMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'
                     }`}
                 >
-                  <span className={`text-[12px] font-bold ml-2 ${isHeroMode ? 'text-white/80' : 'text-gray-700'}`}>Hi, {user.username || 'User'}</span>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${isHeroMode ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                  <span className={`text-[13px] font-semibold ${isHeroMode ? 'text-white drop-shadow-sm' : 'text-black/70'}`}>Hi, {user.username || 'User'}</span>
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-light ${isHeroMode ? 'bg-white text-black' : 'bg-black text-white'
                     }`}>
                     {(user.username || user.name || 'U')[0].toUpperCase()}
                   </div>
@@ -106,19 +106,19 @@ const Navbar = () => {
                 {profileDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setProfileDropdownOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-100/50 p-2 z-20 overflow-hidden">
+                    <div className="absolute right-0 mt-4 w-60 bg-white/80 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl shadow-black/5 p-2 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                       <Link
                         to={dashboardPath}
                         onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all"
+                        className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[13px] font-light text-black/60 hover:text-black hover:bg-black/5 transition-all"
                       >
                         <Icon path={icons.layout} size={16} />
                         Go to Dashboard
                       </Link>
-                      <div className="h-px bg-gray-100 my-1 mx-2" />
+                      <div className="h-px bg-black/5 my-1 mx-2" />
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-all"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[13px] font-light text-red-500/80 hover:bg-red-500/5 transition-all"
                       >
                         <Icon path={icons.logout} size={16} />
                         Sign Out
@@ -130,15 +130,11 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/register"
-                className={`group px-6 py-3 rounded-full text-[12px] font-black uppercase tracking-widest transition-all duration-500 flex items-center gap-3 ${isHeroMode
-                    ? 'bg-white text-gray-900 hover:bg-gray-100 shadow-xl shadow-white/10'
-                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                className={`group h-14 px-10 rounded-2xl text-[13px] font-medium uppercase tracking-[0.2em] transition-all duration-700 flex items-center justify-center ${isHeroMode
+                    ? 'bg-white text-black hover:bg-white/90'
+                    : 'bg-black text-white hover:bg-black/90'
                   }`}
               >
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-transform group-hover:translate-x-1 ${isHeroMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
-                  }`}>
-                  <Icon path={<polyline points="9 18 15 12 9 6" />} size={12} />
-                </div>
                 Get started
               </Link>
             )}

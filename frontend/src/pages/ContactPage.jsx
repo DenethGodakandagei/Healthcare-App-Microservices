@@ -55,28 +55,21 @@ const ContactPage = () => {
           </div>
 
           <div className="relative z-10 max-w-2xl">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tighter mb-10">
-              Experience the <br />
-              Future of Healthcare <br />
-              with ApexEHR
+            <h1 className="text-5xl md:text-8xl font-light text-white leading-[1.1] tracking-tight mb-12">
+              The future of <br />
+              Healthcare is <span className="font-normal">BioGrid</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-white/70 max-w-xl font-medium leading-relaxed tracking-tight mb-12">
-              Have questions or need assistance? Our team of specialists is here to help you revolutionize your workspace.
+            <p className="text-xl md:text-2xl text-white/60 max-w-xl font-light leading-relaxed tracking-wide mb-16">
+              Our specialists are here to help you revolutionize your workspace with next-generation infrastructure.
             </p>
 
-            <div className="flex flex-wrap items-center gap-6">
-                <button className="flex items-center gap-3 px-8 py-5 bg-white text-gray-900 font-black rounded-full hover:bg-gray-100 transition-all shadow-xl shadow-white/5 active:scale-95 group">
-                  <div className="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center transition-transform group-hover:translate-x-1">
-                    <Icon path={icons.arrowRight} size={14} />
-                  </div>
+            <div className="flex flex-wrap items-center gap-8">
+                <button className="h-16 px-10 bg-white text-black font-medium rounded-2xl hover:bg-white/90 transition-all active:scale-95 tracking-widest text-[11px] uppercase">
                   Get started
                 </button>
                 
-                <button className="flex items-center gap-3 px-8 py-5 border border-white/30 text-white font-bold rounded-full hover:bg-white/10 transition-all backdrop-blur-sm group active:scale-95">
-                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/40 transition-colors">
-                    <Icon path={<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />} size={12} className="fill-white" />
-                  </div>
+                <button className="h-16 px-10 border border-white/20 text-white font-light rounded-2xl hover:bg-white/5 transition-all backdrop-blur-sm group active:scale-95 tracking-widest text-[11px] uppercase">
                   Request a demo
                 </button>
             </div>
@@ -87,9 +80,9 @@ const ContactPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
           
           {/* Left: Contact Form */}
-          <div className="bg-white rounded-[2.5rem] p-8 lg:p-16 border border-gray-100 shadow-sm transition-all hover:shadow-xl hover:shadow-gray-100/50">
-            <h2 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Drop us a line</h2>
-            <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-10">We reply in less than 24 hours.</p>
+          <div className="bg-white rounded-[3rem] p-10 lg:p-20 border border-black/5 transition-all hover:shadow-2xl hover:shadow-black/5">
+            <h2 className="text-4xl font-light text-black mb-4 tracking-tight">Drop us a line</h2>
+            <p className="text-black/30 font-light text-[10px] uppercase tracking-[0.4em] mb-12">We reply in less than 24 hours.</p>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -136,10 +129,10 @@ const ContactPage = () => {
               <button 
                 type="submit"
                 disabled={submitted}
-                className={`w-full py-5 rounded-2xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${
+                className={`w-full h-16 rounded-2xl font-medium text-[11px] uppercase tracking-[0.2em] transition-all ${
                   submitted 
                   ? 'bg-green-500 text-white shadow-xl shadow-green-500/20' 
-                  : 'bg-gray-900 text-white hover:bg-gray-800 shadow-xl shadow-gray-900/10 active:scale-95'
+                  : 'bg-black text-white hover:bg-black/90 active:scale-95'
                 }`}
               >
                 {submitted ? (
@@ -165,9 +158,9 @@ const ContactPage = () => {
                      <Icon path={icons.mail} size={28} />
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-300 mb-2">Email Us</h4>
-                    <p className="text-2xl font-black text-gray-900 tracking-tight">apex@gmail.com</p>
-                    <p className="text-gray-400 font-medium">Available 24/7 for support.</p>
+                    <h4 className="text-[10px] font-medium uppercase tracking-[0.3em] text-black/20 mb-2">Email</h4>
+                    <p className="text-2xl font-light text-black tracking-tight">hello@biogrid.com</p>
+                    <p className="text-black/30 font-light text-sm">Available 24/7 for support.</p>
                   </div>
                </div>
 

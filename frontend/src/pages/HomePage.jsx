@@ -129,91 +129,121 @@ const HomePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
             {/* 1. Doctor Dashboard - White/Light Card with % graphic */}
             <div className="lg:row-span-2 bg-[#FAFBFF] rounded-[2.5rem] p-10 flex flex-col border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 group">
-               <h3 className="text-gray-900 font-black text-xl mb-4">Doctor <br /> Dashboard</h3>
-               <div className="mt-auto relative w-32 h-32">
-                  <svg className="w-full h-full text-blue-100" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="280" strokeDashoffset="280" className="animate-[dash_2s_ease-out_forwards]" />
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.2" />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-3xl font-black text-blue-600">51%</span>
-                  </div>
-               </div>
+              <h3 className="text-gray-900 font-black text-xl mb-4">Doctor <br /> Dashboard</h3>
+              <div className="space-y-3 mb-8">
+                <div className="h-2 w-full bg-blue-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 w-[70%]" />
+                </div>
+                <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <span>Daily Goal</span>
+                  <span>70%</span>
+                </div>
+              </div>
+              <div className="mt-auto relative w-32 h-32 self-center">
+                <svg className="w-full h-full text-blue-100" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="280" strokeDashoffset="280" className="animate-[dash_2s_ease-out_forwards]" />
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.2" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-3xl font-black text-blue-600">51%</span>
+                </div>
+              </div>
             </div>
 
             {/* 2. Revenue Cycle Management - Image Card */}
             <div className="lg:row-span-2 bg-gray-900 rounded-[2.5rem] overflow-hidden relative group shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
-               <img src={revenueCycleImg} className="w-full h-full object-cover opacity-70 group-hover:scale-110 transition-transform duration-1000" alt="Revenue Cycle" />
-               <div className="absolute inset-x-8 top-8">
-                  <h3 className="text-white font-black text-xl leading-tight">Revenue Cycle <br /> Management</h3>
-               </div>
+              <img src={revenueCycleImg} className="w-full h-full object-cover opacity-70 group-hover:scale-110 transition-transform duration-1000" alt="Revenue Cycle" />
+              <div className="absolute inset-x-8 top-8">
+                <h3 className="text-white font-black text-xl leading-tight">Revenue Cycle <br /> Management</h3>
+              </div>
             </div>
 
             {/* 3. Patient Portal - White Glass Card */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-[2.5rem] p-8 flex flex-col justify-between border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group">
-               <h3 className="text-gray-900 font-black text-lg">Patient Portal</h3>
-               <div className="flex gap-2 mt-8">
-                  <div className="w-8 h-8 rounded-full bg-blue-100" />
-                  <div className="w-8 h-8 rounded-full bg-blue-50" />
-               </div>
+            <div className="bg-white rounded-[2.5rem] p-8 flex flex-col border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group">
+              <h3 className="text-gray-900 font-black text-lg mb-2">Patient Portal</h3>
+              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">Recent Activity</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                    <Icon path={<circle cx="12" cy="12" r="10" />} size={12} />
+                  </div>
+                  <div className="h-2 w-20 bg-gray-100 rounded-full" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+                    <Icon path={<circle cx="12" cy="12" r="10" />} size={12} />
+                  </div>
+                  <div className="h-2 w-16 bg-gray-100 rounded-full" />
+                </div>
+              </div>
             </div>
 
             {/* 4. Appointment Scheduling - Image Card */}
-            <div className="lg:row-span-2 rounded-[2.5rem] overflow-hidden relative group shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
-               <img src="https://images.unsplash.com/photo-1504813184591-01592fd03cf7?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-700" alt="Scheduling" />
-               <div className="absolute inset-x-8 top-8">
-                  <h3 className="text-white font-black text-xl leading-tight">Appointment <br /> Scheduling</h3>
-               </div>
+            <div className="lg:row-span-2 bg-blue-50/50 rounded-[2.5rem] overflow-hidden relative group shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+              <img src="https://images.unsplash.com/photo-1666214280557-f1b5022eb634?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt="Scheduling" />
+              <div className="absolute inset-x-8 top-8">
+                <h3 className="text-white font-black text-xl leading-tight drop-shadow-lg">Appointment <br /> Scheduling</h3>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent opacity-70" />
             </div>
 
             {/* 5. Advanced Reporting - Blue Card */}
             <div className="bg-[#427CFF] rounded-[2.5rem] p-8 flex flex-col justify-between shadow-xl shadow-blue-500/20 group hover:-translate-y-1 transition-all">
-               <h3 className="text-white font-black text-lg leading-tight">Advanced Reporting <br /> & Analytics</h3>
-               <div className="flex items-end gap-1.5 h-12 mt-6">
-                  <div className="flex-1 bg-white/20 rounded-sm h-[40%]" />
-                  <div className="flex-1 bg-white/60 rounded-sm h-[70%]" />
-                  <div className="flex-1 bg-white/40 rounded-sm h-[55%]" />
-                  <div className="flex-1 bg-white/90 rounded-sm h-[90%]" />
-               </div>
+              <h3 className="text-white font-black text-lg leading-tight">Advanced Reporting <br /> & Analytics</h3>
+              <div className="flex items-end gap-1.5 h-12 mt-6">
+                <div className="flex-1 bg-white/20 rounded-sm h-[40%]" />
+                <div className="flex-1 bg-white/60 rounded-sm h-[70%]" />
+                <div className="flex-1 bg-white/40 rounded-sm h-[55%]" />
+                <div className="flex-1 bg-white/90 rounded-sm h-[90%]" />
+              </div>
             </div>
 
             {/* 6. e-Prescription Management - Image Card */}
             <div className="bg-gray-100 rounded-[2.5rem] overflow-hidden relative group shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
-               <img src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover opacity-80" alt="Prescriptions" />
-               <div className="absolute inset-x-6 top-6">
-                  <h3 className="text-gray-900 font-black text-base leading-tight">e-Prescription <br /> Management</h3>
-               </div>
+              <img src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover opacity-80" alt="Prescriptions" />
+              <div className="absolute inset-x-6 top-6">
+                <h3 className="text-gray-900 font-black text-base leading-tight">e-Prescription <br /> Management</h3>
+              </div>
             </div>
 
             {/* 7. Clinical Decision Support - Blue Card */}
             <div className="bg-[#427CFF] rounded-[2.5rem] p-8 flex flex-col justify-between shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 group">
-               <h3 className="text-white font-black text-lg leading-tight">Clinical Decision <br /> Support</h3>
-               <div className="ml-auto w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full animate-ping" />
-               </div>
+              <h3 className="text-white font-black text-lg leading-tight">Clinical Decision <br /> Support</h3>
+              <div className="ml-auto w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full animate-ping" />
+              </div>
             </div>
 
             {/* 8. Telemedicine Integration - Dark Blue Tall Card */}
             <div className="lg:row-span-2 bg-[#1A337E] rounded-[3rem] p-10 flex flex-col justify-between shadow-2xl shadow-indigo-900/10 group hover:-translate-y-1 transition-all relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:bg-white/10 transition-colors" />
-               <div className="relative z-10">
-                  <h3 className="text-white font-black text-2xl mb-4 leading-tight">Telemedicine <br /> Integration</h3>
-                  <p className="text-white/40 text-xs font-bold leading-relaxed max-w-[200px]">Secure, real-time video consultations for remote care.</p>
-               </div>
-               <Link to="/doctors" className="mt-10 self-start group/btn flex items-center gap-3 px-8 py-4 bg-white text-gray-900 font-black rounded-full hover:bg-gray-100 transition-all text-xs uppercase tracking-widest shadow-xl active:scale-95">
-                  Start Now
-                  <div className="w-5 h-5 bg-gray-900 text-white rounded-full flex items-center justify-center transition-transform group-hover/btn:translate-x-1">
-                    <Icon path={<polyline points="9 18 15 12 9 6" />} size={12} />
-                  </div>
-               </Link>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl group-hover:bg-white/10 transition-colors" />
+              <div className="relative z-10">
+                <h3 className="text-white font-black text-2xl mb-4 leading-tight">Telemedicine <br /> Integration</h3>
+                <p className="text-white/40 text-xs font-bold leading-relaxed max-w-[200px]">Secure, real-time video consultations for remote care.</p>
+              </div>
+              <Link to="/doctors" className="mt-10 self-start group/btn flex items-center gap-3 px-8 py-4 bg-white text-gray-900 font-black rounded-full hover:bg-gray-100 transition-all text-xs uppercase tracking-widest shadow-xl active:scale-95">
+                Start Now
+                <div className="w-5 h-5 bg-gray-900 text-white rounded-full flex items-center justify-center transition-transform group-hover/btn:translate-x-1">
+                  <Icon path={<polyline points="9 18 15 12 9 6" />} size={12} />
+                </div>
+              </Link>
             </div>
 
             {/* 9. Medication Management - White Card */}
-            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
-               <h3 className="text-gray-900 font-black text-lg mb-4">Medication <br /> Management</h3>
-               <div className="grid grid-cols-4 gap-2">
-                  {[1,2,3,4].map(i => <div key={i} className="aspect-square bg-gray-50 rounded-lg" />)}
-               </div>
+            <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group">
+              <h3 className="text-gray-900 font-black text-lg mb-4">Medication <br /> Management</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
+                  <Icon path={<path d="M10.5 3a2 2 0 1 1 4 0v15a2 2 0 1 1-4 0V3zM3 10.5a2 2 0 1 1 0 4h15a2 2 0 1 1 0-4H3z" />} size={20} />
+                </div>
+                <div className="p-3 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500">
+                  <Icon path={<circle cx="12" cy="12" r="8" />} size={20} />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Live Tracking</span>
+              </div>
             </div>
 
           </div>
@@ -337,7 +367,7 @@ const HomePage = () => {
                   <input
                     type="text"
                     placeholder="Enter your name"
-                    className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 transition-all font-bold text-gray-900 placeholder:text-gray-300 outline-none"
+                    className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 transition-all  text-gray-900 placeholder:text-gray-300 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -345,7 +375,7 @@ const HomePage = () => {
                   <input
                     type="email"
                     placeholder="name@company.com"
-                    className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 transition-all font-bold text-gray-900 placeholder:text-gray-300 outline-none"
+                    className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 transition-all  text-gray-900 placeholder:text-gray-300 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -353,7 +383,7 @@ const HomePage = () => {
                   <textarea
                     rows="3"
                     placeholder="Tell us about your needs..."
-                    className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 transition-all font-bold text-gray-900 placeholder:text-gray-300 outline-none resize-none"
+                    className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 transition-all  text-gray-900 placeholder:text-gray-300 outline-none resize-none"
                   ></textarea>
                 </div>
                 <button className="w-full py-4 bg-[#427CFF] text-white font-black rounded-2xl hover:bg-blue-600 transition-all shadow-xl shadow-blue-200 active:scale-[0.98]">
