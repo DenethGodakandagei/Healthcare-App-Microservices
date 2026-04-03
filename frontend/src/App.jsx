@@ -9,6 +9,7 @@ import BookingPage from './pages/BookingPage';
 import ConfirmBookingPage from './pages/ConfirmBookingPage';
 import PatientDashboard from './pages/patient/PatientDashboard';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
+import VideoCallPage from './pages/VideoCallPage';
 
 function App() {
   return (
@@ -39,6 +40,16 @@ function App() {
             element={
               <ProtectedRoute allowedRole="doctor">
                 <DoctorDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Video Call (protected - both doctor and patient) */}
+          <Route
+            path="/video-call/:sessionId"
+            element={
+              <ProtectedRoute>
+                <VideoCallPage />
               </ProtectedRoute>
             }
           />

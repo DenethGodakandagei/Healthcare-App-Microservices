@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { doctorAPI, appointmentAPI, sessionAPI } from '../../services/api';
+import { doctorAPI, appointmentAPI, sessionAPI, telemedicineAPI } from '../../services/api';
 
 /* ─── Icon helper ─────────────────────────────────────────────── */
 const Icon = ({ path, size = 20 }) => (
@@ -29,6 +29,8 @@ const icons = {
   alert: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
   trending: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
   activity: <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>,
+  video: <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></>,
+  phone: <><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></>,
 };
 
 /* ─── Reusable components ─────────────────────────────────────── */
@@ -430,6 +432,216 @@ const SessionsTab = () => {
   );
 };
 
+/* ─── Online Appointments Tab ─────────────────────────────────── */
+const OnlineAppointmentsTab = ({ appointments, setAppointments, user, navigate }) => {
+  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(null);
+
+  const onlineAppointments = appointments.filter(a => a.appointmentType === 'online');
+  const pendingOnline = onlineAppointments.filter(a => a.onlineStatus === 'pending');
+  const approvedOnline = onlineAppointments.filter(a => a.onlineStatus === 'approved');
+  const declinedOnline = onlineAppointments.filter(a => a.onlineStatus === 'declined');
+
+  const handleApprove = async (apt) => {
+    setActionLoading(apt._id);
+    try {
+      // Update appointment onlineStatus to approved
+      await appointmentAPI.updateStatus(apt._id, { onlineStatus: 'approved' });
+      // Create telemedicine video session
+      await telemedicineAPI.createSession({
+        appointmentId: apt._id,
+        patientId: apt.patientId,
+        doctorId: apt.doctorId,
+        patientName: apt.patientName,
+        doctorName: `Dr. ${user?.username || user?.name}`,
+      });
+      setAppointments(prev => prev.map(a => a._id === apt._id ? { ...a, onlineStatus: 'approved' } : a));
+    } catch (err) {
+      console.error('Approve failed:', err);
+    }
+    setActionLoading(null);
+  };
+
+  const handleDecline = async (apt) => {
+    setActionLoading(apt._id);
+    try {
+      await appointmentAPI.updateStatus(apt._id, { onlineStatus: 'declined' });
+      setAppointments(prev => prev.map(a => a._id === apt._id ? { ...a, onlineStatus: 'declined' } : a));
+    } catch (err) {
+      console.error('Decline failed:', err);
+    }
+    setActionLoading(null);
+  };
+
+  const handleJoinCall = (apt) => {
+    navigate(`/video-call/${apt._id}?appointmentId=${apt._id}`);
+  };
+
+  const OnlineStatusBadge = ({ status }) => {
+    const config = {
+      pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      approved: 'bg-green-50 text-green-700 border-green-200',
+      declined: 'bg-red-50 text-red-600 border-red-200',
+    };
+    return (
+      <span className={`text-xs px-2.5 py-1 rounded-full border capitalize font-medium ${config[status] || config.pending}`}>
+        {status}
+      </span>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-gray-900 text-xl font-bold flex items-center gap-2">
+          <div className="text-cyan-600"><Icon path={icons.video} size={20} /></div>
+          Online Consultations
+        </h2>
+        <p className="text-gray-500 text-sm mt-0.5">
+          {onlineAppointments.length} online appointment{onlineAppointments.length !== 1 ? 's' : ''} · {pendingOnline.length} pending approval
+        </p>
+      </div>
+
+      {/* Pending Requests Section */}
+      {pendingOnline.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+            <h3 className="text-gray-900 font-semibold text-sm">Pending Approval ({pendingOnline.length})</h3>
+          </div>
+          {pendingOnline.map(apt => {
+            const date = new Date(apt.date || apt.createdAt);
+            return (
+              <div key={apt._id} className="bg-white border-2 border-yellow-100 rounded-2xl p-5 hover:shadow-sm transition-shadow">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                      {(apt.patientName || 'P')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-gray-900 font-semibold">{apt.patientName || 'Unknown Patient'}</p>
+                      <div className="flex gap-2 mt-1">
+                        <span className="text-gray-400 text-[10px] uppercase font-bold tracking-tighter bg-gray-100 px-1.5 py-0.5 rounded">NIC: {apt.patientNIC || '—'}</span>
+                        <span className="text-gray-400 text-[10px] uppercase font-bold tracking-tighter bg-gray-100 px-1.5 py-0.5 rounded">TEL: {apt.patientPhone || '—'}</span>
+                      </div>
+                      <p className="text-gray-400 text-xs mt-1">
+                        {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {!isNaN(date) && ` · ${apt.startTime} - ${apt.endTime}`}
+                      </p>
+                      {apt.reasonForVisit && <p className="text-gray-500 text-xs italic mt-1.5 border-l-2 border-gray-100 pl-2">"{apt.reasonForVisit}"</p>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <OnlineStatusBadge status="pending" />
+                    <button
+                      onClick={() => handleDecline(apt)}
+                      disabled={actionLoading === apt._id}
+                      className="text-xs px-3 py-1.5 border border-red-200 text-red-600 rounded-lg font-medium hover:bg-red-50 transition-all disabled:opacity-50"
+                    >
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => handleApprove(apt)}
+                      disabled={actionLoading === apt._id}
+                      className="text-xs px-4 py-1.5 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                    >
+                      {actionLoading === apt._id ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Icon path={icons.check} size={14} />}
+                      Approve
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Approved Sessions - Ready to Join */}
+      {approvedOnline.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+            <h3 className="text-gray-900 font-semibold text-sm">Approved – Ready to Join ({approvedOnline.length})</h3>
+          </div>
+          {approvedOnline.map(apt => {
+            const date = new Date(apt.date || apt.createdAt);
+            return (
+              <div key={apt._id} className="bg-white border border-green-200 rounded-2xl p-5 hover:shadow-sm transition-shadow">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                      {(apt.patientName || 'P')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-gray-900 font-semibold">{apt.patientName || 'Unknown Patient'}</p>
+                      <p className="text-gray-400 text-xs mt-0.5">
+                        {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {!isNaN(date) && ` · ${apt.startTime} - ${apt.endTime}`}
+                      </p>
+                      {apt.reasonForVisit && <p className="text-gray-500 text-xs italic mt-1 border-l-2 border-gray-100 pl-2">"{apt.reasonForVisit}"</p>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <OnlineStatusBadge status="approved" />
+                    <button
+                      onClick={() => handleJoinCall(apt)}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-semibold text-xs hover:from-cyan-400 hover:to-blue-500 transition-all shadow-lg shadow-cyan-500/20"
+                    >
+                      <Icon path={icons.video} size={14} />
+                      Join Call
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Declined */}
+      {declinedOnline.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-red-400 rounded-full" />
+            <h3 className="text-gray-500 font-semibold text-sm">Declined ({declinedOnline.length})</h3>
+          </div>
+          {declinedOnline.map(apt => {
+            const date = new Date(apt.date || apt.createdAt);
+            return (
+              <div key={apt._id} className="bg-gray-50 border border-gray-200 rounded-2xl p-5 opacity-60">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center text-gray-500 font-bold">
+                      {(apt.patientName || 'P')[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium text-sm">{apt.patientName || 'Unknown'}</p>
+                      <p className="text-gray-400 text-xs">
+                        {isNaN(date) ? '' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+                  <OnlineStatusBadge status="declined" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {onlineAppointments.length === 0 && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center">
+          <div className="text-gray-200 flex justify-center mb-4"><Icon path={icons.video} size={44} /></div>
+          <p className="text-gray-600 text-sm font-semibold">No online appointments yet</p>
+          <p className="text-gray-400 text-xs mt-1">When patients book online consultations, they will appear here for your approval</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ─── Main Dashboard ─────────────────────────────────────────── */
 const DoctorDashboard = () => {
   const { user, logout } = useAuth();
@@ -462,6 +674,7 @@ const DoctorDashboard = () => {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: 'home' },
     { id: 'appointments', label: 'Appointments', icon: 'calendar' },
+    { id: 'online', label: 'Online Consult', icon: 'video' },
     { id: 'sessions', label: 'Sessions', icon: 'sessions' },
     { id: 'patients', label: 'Patients', icon: 'users' },
     { id: 'profile', label: 'My Profile', icon: 'user' },
@@ -658,6 +871,9 @@ const DoctorDashboard = () => {
                   )}
                 </div>
               )}
+
+              {/* ── ONLINE APPOINTMENTS ── */}
+              {activeTab === 'online' && <OnlineAppointmentsTab appointments={appointments} setAppointments={setAppointments} user={user} navigate={navigate} />}
 
               {/* ── SESSIONS ── */}
               {activeTab === 'sessions' && <SessionsTab />}

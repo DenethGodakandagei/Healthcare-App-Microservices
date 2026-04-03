@@ -50,4 +50,23 @@ export const sessionAPI = {
   delete: (id) => API.delete(`/appointments/sessions/${id}`),
 };
 
+// Telemedicine (video consultation)
+export const telemedicineAPI = {
+  // Create a video session for an appointment
+  createSession: (data) => API.post('/telemedicine', data),
+  // Generate Agora token
+  generateToken: (data) => API.post('/telemedicine/token', data),
+  // Get session by appointment ID
+  getSessionByAppointment: (appointmentId) => API.get(`/telemedicine/appointment/${appointmentId}`),
+  // Update session status
+  updateSessionStatus: (id, data) => API.put(`/telemedicine/${id}/status`, data),
+  // Get doctor's telemedicine sessions
+  getDoctorSessions: () => API.get('/telemedicine/doctor'),
+  // Get patient's telemedicine sessions
+  getPatientSessions: () => API.get('/telemedicine/patient'),
+  // Chat messages
+  sendMessage: (sessionId, data) => API.post(`/telemedicine/${sessionId}/chat`, data),
+  getMessages: (sessionId) => API.get(`/telemedicine/${sessionId}/chat`),
+};
+
 export default API;
