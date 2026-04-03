@@ -37,7 +37,8 @@ export const doctorAPI = {
 export const appointmentAPI = {
   getAll: () => API.get('/appointments'),
   book: (data) => API.post('/appointments', data),
-  cancel: (id) => API.delete(`/appointments/${id}`),
+  updateStatus: (id, data) => API.put(`/appointments/${id}/status`, data),
+  cancel: (id) => appointmentAPI.updateStatus(id, { status: 'cancelled' }),
 };
 
 // Sessions (doctor availability blocks)

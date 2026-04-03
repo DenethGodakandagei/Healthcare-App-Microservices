@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { patientAPI, appointmentAPI } from '../../services/api';
+import { patientAPI, appointmentAPI, doctorAPI } from '../../services/api';
 import doc1 from '../../assets/doc1.png';
 import doc2 from '../../assets/doc2.png';
 import doc3 from '../../assets/doc3.png';
 import doc4 from '../../assets/doc4.png';
+import AppointmentBookingWizard from '../../components/AppointmentBookingWizard';
+import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
 
 const doctorImages = [doc1, doc2, doc3, doc4];
 
@@ -52,39 +54,48 @@ const StatCard = ({ label, value, sub, icon }) => (
 
 
 
-const AppointmentCard = ({ apt, onCancel }) => {
-  const date = new Date(apt.date || apt.scheduledAt || apt.createdAt);
+const AppointmentCard = ({ apt, doctors, onCancel, onEdit }) => {
+  const appointmentDate = new Date(apt.date || apt.sessionId?.date);
+  const sessionStart = apt.sessionId?.startTime || apt.startTime;
+  const sessionEnd = apt.sessionId?.endTime || apt.endTime;
+
+  // Get doctorId from appointment or session
+  const doctorId = apt.doctorId || apt.sessionId?.doctorId;
+  const doctor = doctors.find(d => d.userId === doctorId || String(d._id) === String(doctorId));
+  const doctorName = doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : 'Unknown';
+  const doctorSpecialty = doctor?.specialty || 'General';
+
   const statusConfig = {
-    confirmed: 'bg-green-50 text-green-700 border-green-200',
-    pending:   'bg-yellow-50 text-yellow-700 border-yellow-200',
+    scheduled: 'bg-blue-50 text-blue-700 border-blue-200',
+    completed: 'bg-green-50 text-green-700 border-green-200',
     cancelled: 'bg-red-50 text-red-600 border-red-200',
-    completed: 'bg-blue-50 text-blue-700 border-blue-200',
   };
-  const status = apt.status || 'pending';
+  const status = apt.status || 'scheduled';
+
+  const formatDate = (date) => {
+    if (isNaN(date)) return 'TBD';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const sessionTime = sessionStart && sessionEnd ? `${sessionStart}-${sessionEnd}` : '';
 
   return (
-    <div className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:shadow-sm transition-shadow">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100">
-           <img
-             src={getDoctorImage(apt.doctorId || apt.doctor?._id || apt._id)}
-             alt="Doctor"
-             className="w-full h-full object-cover"
-           />
-        </div>
-        <div>
-          <p className="text-gray-900 text-sm font-semibold">Dr. {apt.doctorName || apt.doctor?.name || 'Unknown'}</p>
-          <div className="flex flex-col gap-0.5 mt-0.5">
-            <p className="text-gray-400 text-[10px] font-bold uppercase tracking-tight">Patient: <span className="text-gray-900">{apt.patientName || 'Self'}</span></p>
-            <p className="text-gray-500 text-xs">{apt.specialty || 'General Physician'} · {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-          </div>
-        </div>
+    <div className="flex items-center px-3 py-2 bg-white border border-gray-200 rounded hover:shadow-sm transition-shadow text-sm">
+      <div className="w-48 shrink-0 font-medium text-gray-900 truncate">{doctorName}</div>
+      <div className="w-24 shrink-0 text-gray-500 truncate mx-8">{doctorSpecialty}</div>
+      <div className="w-24 shrink-0 text-gray-600">{formatDate(appointmentDate)}</div>
+      <div className="w-24 shrink-0 text-gray-500">{sessionTime}</div>
+      <div className="flex-1 text-gray-400 truncate">{apt.reasonForVisit || ''}</div>
+      <div className="shrink-0">
+        <span className={`inline-flex px-2 py-0.5 text-xs font-medium border rounded ${statusConfig[status]}`}>{status}</span>
       </div>
-      <div className="flex items-center gap-3">
-        <span className={`text-xs px-2.5 py-1 rounded-full border capitalize font-medium ${statusConfig[status] || statusConfig.pending}`}>{status}</span>
-        {status !== 'cancelled' && status !== 'completed' && (
-          <button onClick={() => onCancel(apt._id)} className="text-gray-400 hover:text-red-500 transition-colors text-xs font-medium">Cancel</button>
-        )}
+      <div className="flex gap-2 shrink-0 ml-4">
+        <button onClick={() => onEdit(apt)} className="text-xs px-2 py-1 border border-gray-200 text-gray-600 rounded hover:bg-gray-50 transition-colors">
+          Edit
+        </button>
+        <button onClick={() => onCancel(apt._id)} className="text-xs px-2 py-1 border border-red-200 text-red-600 rounded hover:bg-red-50 transition-colors">
+          Cancel
+        </button>
       </div>
     </div>
   );
@@ -97,28 +108,88 @@ const PatientDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [doctors, setDoctors] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [editAppointment, setEditAppointment] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [aptsRes, profileRes] = await Promise.allSettled([
-          appointmentAPI.getAll(),
+        const [aptsRes, profileRes, doctorsRes] = await Promise.allSettled([
+          patientAPI.getAppointments(),
           patientAPI.getProfile(),
+          doctorAPI.getAll(),
         ]);
-        if (aptsRes.status === 'fulfilled') setAppointments(aptsRes.value.data || []);
-        if (profileRes.status === 'fulfilled') setProfile(profileRes.value.data);
-      } catch (_) {}
-      setLoadingData(false);
+
+        // Get patient's appointments
+        let patientAppointments = [];
+        if (aptsRes.status === 'fulfilled') {
+          const response = aptsRes.value?.data;
+          patientAppointments = response?.data || [];
+        }
+
+        // Load profile (optional)
+        if (profileRes.status === 'fulfilled') {
+          const profileResponse = profileRes.value?.data;
+          const profileData = profileResponse?.data || profileResponse;
+          setProfile(profileData);
+        }
+
+        // Load doctors
+        if (doctorsRes.status === 'fulfilled') {
+          const doctorsResponse = doctorsRes.value?.data;
+          const doctorsList = doctorsResponse?.data || doctorsResponse || [];
+          setDoctors(doctorsList);
+        }
+
+        setAppointments(patientAppointments);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      } finally {
+        setLoadingData(false);
+      }
     };
     load();
   }, []);
 
-  const handleCancel = async (id) => {
+  const handleCancel = (id) => {
+    setDeleteConfirmId(id);
+  };
+
+  const confirmCancel = async () => {
+    if (!deleteConfirmId) return;
     try {
-      await appointmentAPI.cancel(id);
-      setAppointments((prev) => prev.map((a) => a._id === id ? { ...a, status: 'cancelled' } : a));
-    } catch (_) {}
+      await appointmentAPI.cancel(deleteConfirmId);
+      setAppointments((prev) => prev.map((a) => a._id === deleteConfirmId ? { ...a, status: 'cancelled' } : a));
+    } catch (error) {
+      console.error('Cancel failed:', error);
+    }
+    setDeleteConfirmId(null);
+  };
+
+  const handleEdit = (apt) => {
+    setEditAppointment({ ...apt });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editAppointment) return;
+    try {
+      await appointmentAPI.updateStatus(editAppointment._id, {
+        status: editAppointment.status,
+        reasonForVisit: editAppointment.reasonForVisit
+      });
+      setAppointments((prev) => prev.map((a) =>
+        a._id === editAppointment._id ? { ...a, ...editAppointment } : a
+      ));
+      setShowEditModal(false);
+      setEditAppointment(null);
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
   };
 
   const handleLogout = () => { logout(); navigate('/login'); };
@@ -259,9 +330,9 @@ const PatientDashboard = () => {
                         <p className="text-gray-400 text-xs mt-1">Book an appointment with a doctor</p>
                       </div>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         {upcoming.slice(0, 3).map((apt) => (
-                          <AppointmentCard key={apt._id} apt={apt} onCancel={handleCancel} />
+                          <AppointmentCard key={apt._id} apt={apt} doctors={doctors} onCancel={handleCancel} onEdit={handleEdit} />
                         ))}
                       </div>
                     )}
@@ -272,9 +343,18 @@ const PatientDashboard = () => {
               {/* ---- APPOINTMENTS ---- */}
               {activeTab === 'appointments' && (
                 <div className="space-y-5">
-                  <div>
-                    <h2 className="text-gray-900 text-xl font-bold">Appointments</h2>
-                    <p className="text-gray-500 text-sm mt-0.5">{appointments.length} total appointments</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-gray-900 text-xl font-bold">Appointments</h2>
+                      <p className="text-gray-500 text-sm mt-0.5">{appointments.length} total appointments</p>
+                    </div>
+                    <button
+                      onClick={() => setShowBookingModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors text-sm font-medium"
+                    >
+                      <Icon path={icons.plus} size={16} />
+                      New Appointment
+                    </button>
                   </div>
                   {appointments.length === 0 ? (
                     <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center">
@@ -283,9 +363,9 @@ const PatientDashboard = () => {
                       <p className="text-gray-400 text-xs mt-1">Your appointment history will appear here</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       {appointments.map((apt) => (
-                        <AppointmentCard key={apt._id} apt={apt} onCancel={handleCancel} />
+                        <AppointmentCard key={apt._id} apt={apt} doctors={doctors} onCancel={handleCancel} onEdit={handleEdit} />
                       ))}
                     </div>
                   )}
@@ -348,6 +428,61 @@ const PatientDashboard = () => {
           )}
         </main>
       </div>
+
+      {/* Modals */}
+      <AppointmentBookingWizard open={showBookingModal} onClose={() => setShowBookingModal(false)} />
+      <ConfirmDeleteModal open={!!deleteConfirmId} onConfirm={confirmCancel} onCancel={() => setDeleteConfirmId(null)} />
+
+      {/* Edit Appointment Modal */}
+      {showEditModal && editAppointment && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-xl">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Appointment</h3>
+              <button onClick={() => { setShowEditModal(false); setEditAppointment(null); }} className="text-gray-400 hover:text-gray-600">
+                <Icon path={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} size={18} />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Reason for Visit</label>
+                <textarea
+                  value={editAppointment.reasonForVisit || ''}
+                  onChange={(e) => setEditAppointment(prev => ({ ...prev, reasonForVisit: e.target.value }))}
+                  className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <select
+                  value={editAppointment.status || 'scheduled'}
+                  onChange={(e) => setEditAppointment(prev => ({ ...prev, status: e.target.value }))}
+                  className="w-full p-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none"
+                >
+                  <option value="scheduled">Scheduled</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => { setShowEditModal(false); setEditAppointment(null); }}
+                className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
