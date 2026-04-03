@@ -176,7 +176,7 @@ export const getDoctorAppointments = async (req, res) => {
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
-    const { status, notes } = req.body;
+    const { status, notes, reasonForVisit } = req.body;
     const appointmentId = req.params.id;
 
     let appointment = await Appointment.findById(appointmentId);
@@ -188,6 +188,7 @@ export const updateAppointmentStatus = async (req, res) => {
 
     if (status) appointment.status = status;
     if (notes) appointment.notes = notes;
+    if (reasonForVisit !== undefined) appointment.reasonForVisit = reasonForVisit;
 
     await appointment.save();
     res.status(200).json({ success: true, data: appointment });
