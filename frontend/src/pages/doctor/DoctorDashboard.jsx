@@ -656,7 +656,7 @@ const DoctorDashboard = () => {
     const load = async () => {
       try {
         const [aptsRes, profileRes] = await Promise.allSettled([
-          appointmentAPI.getAll(),
+          doctorAPI.getAppointments(),
           doctorAPI.getProfile(),
         ]);
         if (aptsRes.status === 'fulfilled') setAppointments(aptsRes.value.data?.data || aptsRes.value.data || []);
