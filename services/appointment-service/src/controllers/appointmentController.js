@@ -109,7 +109,7 @@ export const bookAppointment = async (req, res) => {
     const patientId = req.headers['x-user-id'];
     if (!patientId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    const { sessionId, reasonForVisit, patientName, patientNIC, patientPhone } = req.body;
+    const { sessionId, reasonForVisit, patientName, patientNIC, patientPhone, appointmentType } = req.body;
 
     const session = await Session.findById(sessionId);
     if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
@@ -141,7 +141,8 @@ export const bookAppointment = async (req, res) => {
       reasonForVisit,
       patientName,
       patientNIC,
-      patientPhone
+      patientPhone,
+      appointmentType: appointmentType || 'physical'
     });
 
     res.status(201).json({ success: true, data: appointment });
@@ -189,6 +190,7 @@ export const updateAppointmentStatus = async (req, res) => {
     if (status) appointment.status = status;
     if (notes) appointment.notes = notes;
     if (reasonForVisit !== undefined) appointment.reasonForVisit = reasonForVisit;
+    if (req.body.onlineStatus) appointment.onlineStatus = req.body.onlineStatus;
 
     await appointment.save();
     res.status(200).json({ success: true, data: appointment });
