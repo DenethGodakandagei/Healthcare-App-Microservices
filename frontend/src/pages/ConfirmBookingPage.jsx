@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import BookingForm from '../components/BookingForm';
 import BookingSuccess from '../components/BookingSuccess';
@@ -14,6 +14,9 @@ const doctorImages = [doc1, doc2, doc3, doc4];
 
 const ConfirmBookingPage = () => {
   const { doctorId, sessionId } = useParams();
+  const [searchParams] = useSearchParams();
+  const sessionType = searchParams.get('type') || 'offline';
+  const isOnline = sessionType === 'online';
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -95,7 +98,8 @@ const ConfirmBookingPage = () => {
         reasonForVisit: reason || "General Consultation",
         patientName,
         patientNIC,
-        patientPhone
+        patientPhone,
+        appointmentType: isOnline ? 'online' : 'physical'
       });
       setSuccess(res.data?.data);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -150,10 +154,15 @@ const ConfirmBookingPage = () => {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-black text-gray-900 leading-tight">Dr. {doctor.firstName} {doctor.lastName}</h3>
-                      <p className="text-indigo-500 text-xs font-bold uppercase tracking-widest mt-1">{doctor.specialty}</p>
-                    </div>
+                     <div>
+                       <h3 className="text-xl font-black text-gray-900 leading-tight">Dr. {doctor.firstName} {doctor.lastName}</h3>
+                       <div className="flex items-center gap-2 mt-1">
+                         <p className="text-indigo-500 text-xs font-bold uppercase tracking-widest">{doctor.specialty}</p>
+                         {isOnline && (
+                           <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-[9px] font-black uppercase tracking-widest rounded-full">Video Call</span>
+                         )}
+                       </div>
+                     </div>
                  </div>
 
                  <div className="flex gap-8 relative z-10 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-8 w-full md:w-auto">

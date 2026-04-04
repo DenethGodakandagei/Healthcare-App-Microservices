@@ -45,7 +45,7 @@ const DoctorDashboard = () => {
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: 'home', path: '/doctor/dashboard' },
-    { id: 'appointments', label: 'History', icon: 'calendar', path: '/doctor/dashboard/history' },
+    { id: 'appointments', label: 'Appointments', icon: 'calendar', path: '/doctor/dashboard/appointments' },
     { id: 'sessions', label: 'Availability', icon: 'sessions', path: '/doctor/dashboard/availability' },
     { id: 'profile', label: 'Credentials', icon: 'shield', path: '/doctor/dashboard/credentials' },
   ];

@@ -67,6 +67,7 @@ const AppointmentCard = ({ apt, doctors, onCancel, onEdit }) => {
   const doctor = doctors.find(d => d.userId === doctorId || String(d._id) === String(doctorId));
   const doctorName = doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : 'Unknown';
   const doctorSpecialty = doctor?.specialty || 'General';
+  const isOnline = apt.appointmentType === 'online';
 
   const statusConfig = {
     scheduled: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -83,16 +84,28 @@ const AppointmentCard = ({ apt, doctors, onCancel, onEdit }) => {
   const sessionTime = sessionStart && sessionEnd ? `${sessionStart}-${sessionEnd}` : '';
 
   return (
-    <div className="flex items-center px-3 py-2 bg-white border border-gray-200 rounded hover:shadow-sm transition-shadow text-sm">
+    <div className={`flex items-center px-3 py-2 bg-white border rounded hover:shadow-sm transition-shadow text-sm ${isOnline ? 'border-purple-200' : 'border-gray-200'}`}>
       <div className="w-48 shrink-0 font-medium text-gray-900 truncate">{doctorName}</div>
       <div className="w-24 shrink-0 text-gray-500 truncate mx-8">{doctorSpecialty}</div>
       <div className="w-24 shrink-0 text-gray-600">{formatDate(appointmentDate)}</div>
       <div className="w-24 shrink-0 text-gray-500">{sessionTime}</div>
-      <div className="flex-1 text-gray-400 truncate">{apt.reasonForVisit || ''}</div>
+      <div className="flex-1 text-gray-400 truncate flex items-center gap-2">
+        {isOnline && (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-bold rounded border border-purple-100">
+            <Icon path={icons.video} size={10} />Online
+          </span>
+        )}
+        {apt.reasonForVisit || ''}
+      </div>
       <div className="shrink-0">
         <span className={`inline-flex px-2 py-0.5 text-xs font-medium border rounded ${statusConfig[status]}`}>{status}</span>
       </div>
       <div className="flex gap-2 shrink-0 ml-4">
+        {isOnline && status !== 'cancelled' && status !== 'completed' && (
+          <a href={`/video-call/${apt._id}?appointmentId=${apt._id}`} className="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-1 font-medium">
+            <Icon path={icons.video} size={10} />Join Call
+          </a>
+        )}
         <button onClick={() => onEdit(apt)} className="text-xs px-2 py-1 border border-gray-200 text-gray-600 rounded hover:bg-gray-50 transition-colors">
           Edit
         </button>
@@ -521,7 +534,8 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
     setLoadingSessions(true);
     try {
       const res = await sessionAPI.getAll({ doctorId: doctor.userId, status: 'active' });
-      setSessions(res.data?.data || []);
+      const allSessions = res.data?.data || [];
+      setSessions(allSessions.filter(s => s.sessionType === 'online'));
     } catch (_) {
       setSessions([]);
     }

@@ -22,6 +22,7 @@ const SessionModal = ({ session, onClose, onSave }) => {
     date: session?.date ? new Date(session.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     startTime: session?.startTime || '08:00',
     endTime: session?.endTime || '10:00',
+    sessionType: session?.sessionType || 'offline',
     maxAppointments: session?.maxAppointments ?? 20,
     status: session?.status || 'active',
   });
@@ -60,10 +61,23 @@ const SessionModal = ({ session, onClose, onSave }) => {
                <input type="number" value={form.maxAppointments} onChange={e => setForm({...form, maxAppointments: e.target.value})} className="w-full bg-gray-50 rounded-2xl px-6 py-4 font-black text-sm outline-none focus:ring-4 focus:ring-blue-100 transition-all border-none" />
              </div>
           </div>
-      <div className="grid grid-cols-2 gap-4">
+           <div className="grid grid-cols-2 gap-4">
              <div className="space-y-2">
                <label className="text-blue-500 text-[10px] font-black uppercase tracking-widest ml-2">Shift Start</label>
                <input type="time" value={form.startTime} onChange={e => setForm({...form, startTime: e.target.value})} className="w-full bg-gray-50 rounded-2xl px-6 py-4 font-black text-sm outline-none focus:ring-4 focus:ring-blue-100 transition-all border-none" />
+             </div>
+             <div className="space-y-2">
+               <label className="text-blue-500 text-[10px] font-black uppercase tracking-widest ml-2">Shift End</label>
+               <input type="time" value={form.endTime} onChange={e => setForm({...form, endTime: e.target.value})} className="w-full bg-gray-50 rounded-2xl px-6 py-4 font-black text-sm outline-none focus:ring-4 focus:ring-blue-100 transition-all border-none" />
+             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+             <div className="space-y-2">
+               <label className="text-blue-500 text-[10px] font-black uppercase tracking-widest ml-2">Session Type</label>
+               <select value={form.sessionType} onChange={e => setForm({...form, sessionType: e.target.value})} className="w-full bg-gray-50 rounded-2xl px-6 py-4 font-black text-sm outline-none focus:ring-4 focus:ring-blue-100 transition-all border-none appearance-none">
+                 <option value="offline">In-Person (Offline)</option>
+                 <option value="online">Video Call (Online)</option>
+               </select>
              </div>
              <div className="space-y-2">
                <label className="text-blue-500 text-[10px] font-black uppercase tracking-widest ml-2">Cycle Status</label>
@@ -74,10 +88,7 @@ const SessionModal = ({ session, onClose, onSave }) => {
                </select>
              </div>
           </div>
-          <div className="space-y-2">
-             <label className="text-blue-500 text-[10px] font-black uppercase tracking-widest ml-2">Shift End</label>
-             <input type="time" value={form.endTime} onChange={e => setForm({...form, endTime: e.target.value})} className="w-full bg-gray-50 rounded-2xl px-6 py-4 font-black text-sm outline-none focus:ring-4 focus:ring-blue-100 transition-all border-none" />
-          </div>
+
 
           <button type="submit" disabled={saving} className="w-full h-20 bg-[#427CFF] text-white font-black rounded-[2rem] hover:bg-blue-600 transition-all shadow-2xl shadow-blue-200 uppercase tracking-[0.3em] text-xs">
             {saving ? 'Processing Cycle...' : 'Synchronize Block'}
@@ -150,11 +161,16 @@ const Availability = () => {
             <div key={s._id} className="bg-white rounded-[2.5rem] border border-gray-50 p-8 hover:shadow-2xl hover:shadow-gray-100/50 transition-all duration-500 relative group overflow-hidden">
                <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#427CFF]">
+                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${s.sessionType === 'online' ? 'bg-purple-50 text-purple-500' : 'bg-blue-50 text-[#427CFF]'}`}>
                        <Icon path={icons.calendar} size={20} />
                      </div>
                      <div>
-                       <h4 className="text-[#111] font-black text-lg tracking-tight">{new Date(s.date).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</h4>
+                       <div className="flex items-center gap-2">
+                         <h4 className="text-[#111] font-black text-lg tracking-tight">{new Date(s.date).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</h4>
+                         {s.sessionType === 'online' && (
+                           <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-[9px] font-black uppercase tracking-widest rounded-lg">Online</span>
+                         )}
+                       </div>
                        <p className="text-gray-400 font-bold text-[11px] uppercase tracking-widest">{s.startTime} — {s.endTime}</p>
                      </div>
                   </div>
