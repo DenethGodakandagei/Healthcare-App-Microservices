@@ -698,11 +698,21 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
                                   <span className="text-[#0EA5E9] text-[10px] font-black uppercase tracking-wider bg-sky-50 px-2 py-0.5 rounded-md">
                                     {doctor?.specialty || 'General Specialist'}
                                   </span>
-                                  <span className="text-gray-400 text-xs">
+                                  <span className="text-gray-400 text-xs text-medium">
                                      {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                      {apt.startTime && ` at ${apt.startTime}`}
                                   </span>
                                </div>
+                               {apt.notes && (
+                                  <div className="mt-2.5 p-2 bg-sky-50/40 border border-sky-300/20 rounded-xl flex items-center gap-2 relative overflow-hidden group/note">
+                                     <div className="w-1 absolute left-0 top-0 bottom-0 bg-[#2299C9]" />
+                                     <div className="text-[#0EA5E9] shrink-0"><Icon path={icons.bell} size={12} /></div>
+                                     <p className="text-[10px] font-medium text-[#2299C9] leading-tight flex-1">
+                                        <span className="font-black uppercase text-[8px] tracking-[0.1em] opacity-60 block mb-0.5">Doctor's Update:</span>
+                                        {apt.notes}
+                                     </p>
+                                  </div>
+                               )}
                             </div>
                           </div>
 
