@@ -13,6 +13,7 @@ import Overview from './components/doctor/Overview';
 import History from './components/doctor/History';
 import Availability from './components/doctor/Availability';
 import Credentials from './components/doctor/Credentials';
+import VideoCallPage from './pages/VideoCallPage';
 
 function App() {
   return (
@@ -51,6 +52,16 @@ function App() {
             <Route path="availability" element={<Availability />} />
             <Route path="credentials" element={<Credentials />} />
           </Route>
+
+          {/* Video Call (protected - both doctor and patient) */}
+          <Route
+            path="/video-call/:sessionId"
+            element={
+              <ProtectedRoute>
+                <VideoCallPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Default redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
