@@ -9,15 +9,15 @@ import {
 
 const router = express.Router();
 
+router.route('/profile')
+  .post(createDoctorProfile)
+  .get(getDoctorProfile)
+  .put(updateDoctorProfile);
+
 router.route('/')
   .get(getAllDoctors);
 
 router.route('/:id')
   .get(getDoctorById);
-
-router.route('/profile')
-  .post(createDoctorProfile)
-  .get(getDoctorProfile)
-  .put(updateDoctorProfile);
 
 export default router;

@@ -32,5 +32,5 @@ const sessionSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-const AppointmentSession = mongoose.model('AppointmentSession', sessionSchema);
-export default AppointmentSession;
+const Session = mongoose.model('Session', sessionSchema);
+export default Session;

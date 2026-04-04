@@ -2,21 +2,20 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const EyeIcon = ({ open }) => open ? (
-  <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-  </svg>
-) : (
-  <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+const Icon = ({ path, size = 20, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {path}
   </svg>
 );
 
-const PlusIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-  </svg>
-);
+const icons = {
+  plus: <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>,
+  eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
+  eyeOff: <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>,
+  google: <><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/><path d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.41 2.64c2-1.84 3.16-4.55 3.16-7.46z" fill="#4285F4"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 23c2.97 0 5.46-1 7.28-2.69l-3.41-2.64c-1 .67-2.28 1.07-3.87 1.07-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/></>,
+  apple: <path d="M17.05 20.28c-.96.95-2.04 1.43-3.24 1.43-1.18 0-2.05-.39-3.2-.39-1.16 0-2.13.39-3.2.39-1.22 0-2.31-.54-3.32-1.63-2.06-2.18-3.09-5.49-3.09-9.1 0-2.41.67-4.32 2-5.74 1.05-1.1 2.3-1.68 3.75-1.68 1.1 0 1.96.34 2.89.34.89 0 1.55-.38 2.85-.38.1 0 .2 0 .31.01 2.22.09 3.86 1.44 4.8 2.92-2.16 1.3-3.35 3.49-3.35 5.86 0 1.94.86 3.65 2.1 4.37-.17.5-.39 1-.65 1-.41 0-.91-.18-1.34-.18-.4 0-.41.17-.41.17zm-1.84-15.01c-.13-.02-.2-.02-.21-.02-1.34 0-2.58.74-3.15 1.83-.87 1.63-.58 3.99.78 5.6.1.13.2.14.22.14 1.25 0 2.59-1 3.11-2.22.75-1.74.45-3.84-.75-5.33z" fill="currentColor"/>,
+  activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />,
+};
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -31,122 +30,87 @@ const LoginPage = () => {
     setError('');
   };
 
+  const validate = () => {
+    if (!form.email || !form.password) return 'Please provide both your clinical email and password.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'The provided email is not a valid clinical address.';
+    if (form.password.length < 8) return 'Password must be at least 8 characters long for security purposes.';
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email || !form.password) { setError('All fields are required.'); return; }
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setLoading(true);
     try {
       const user = await login(form.email, form.password);
-      navigate(user.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard');
+      navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+      setError(err.response?.data?.message || 'The credentials you provided are incorrect. Please verify your identity.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Left branding panel */}
-      <div className="hidden lg:flex flex-col justify-between w-5/12 bg-white border-r border-gray-200 p-12">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white">
-            <PlusIcon />
+    <div className="min-h-screen bg-white flex font-sans text-[#111]">
+      
+      {/* Left Panel - Clean White with Login Form */}
+      <div className="flex-1 flex flex-col p-8 lg:p-20 relative">
+        <Link to="/" className="flex items-center gap-2.5 mb-24 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 bg-[#427CFF] rounded-xl flex items-center justify-center text-white">
+            <Icon path={icons.plus} size={18} />
           </div>
-          <span className="text-gray-900 font-bold text-lg tracking-tight">HealthConnect</span>
-        </div>
+          <span className="font-extrabold text-xl tracking-tighter uppercase text-[#111]">BioGrid</span>
+        </Link>
 
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-gray-900 text-4xl font-bold leading-tight mb-3">
-              Your health,<br />simplified.
-            </h2>
-            <p className="text-gray-500 text-sm leading-relaxed">
-              HealthConnect brings patients and doctors together on one secure, modern platform.
-            </p>
-          </div>
-          <div className="space-y-2.5">
-            {[
-              'Secure JWT-based authentication',
-              'Role-based access for doctors & patients',
-              'Real-time appointment management',
-            ].map((f) => (
-              <div key={f} className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                </div>
-                <span className="text-gray-600 text-sm">{f}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <p className="text-gray-400 text-xs">&copy; 2025 HealthConnect. All rights reserved.</p>
-      </div>
-
-      {/* Right form panel */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 lg:p-16">
-        {/* Mobile logo */}
-        <div className="flex lg:hidden items-center gap-2 mb-10">
-          <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white">
-            <PlusIcon />
-          </div>
-          <span className="text-gray-900 font-bold text-base tracking-tight">HealthConnect</span>
-        </div>
-
-        <div className="w-full max-w-sm">
-          <div className="mb-8">
-            <h1 className="text-gray-900 text-2xl font-bold tracking-tight mb-1">Welcome back</h1>
-            <p className="text-gray-500 text-sm">Sign in to your account to continue</p>
+        <div className="max-w-[480px] w-full mx-auto">
+          <div className="mb-12 text-center lg:text-left">
+            <h1 className="text-4xl font-black tracking-tight mb-2">Welcome Back</h1>
+            <p className="text-[#64748B] font-medium">Log in to keep managing your practice efficiently.</p>
           </div>
 
           {error && (
-            <div className="mb-5 px-4 py-3 border border-red-200 bg-red-50 rounded-xl">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="mb-8 p-4 bg-red-50 text-red-500 rounded-xl text-xs font-bold border border-red-100 italic">
+               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <div>
-              <label className="block text-gray-600 text-xs font-semibold uppercase tracking-widest mb-2">
-                Email Address
-              </label>
-              <input
-                id="login-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="you@example.com"
-                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all duration-200"
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-[#64748B] text-[11px] font-bold">Email Address</label>
+              <input 
+                name="email" 
+                value={form.email} 
+                onChange={handleChange} 
+                placeholder="name@company.com" 
+                className="w-full bg-white border border-gray-200 rounded-xl px-5 py-4 focus:shadow-[0_0_0_4px_rgba(66,124,255,0.1)] focus:border-[#427CFF] transition-all outline-none" 
               />
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="text-gray-600 text-xs font-semibold uppercase tracking-widest">Password</label>
-                <Link to="/forgot-password" className="text-gray-400 text-xs hover:text-gray-700 transition-colors">Forgot password?</Link>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="block text-[#64748B] text-[11px] font-bold">Password</label>
+                <Link to="/forgot-password" className="text-[#64748B] text-[11px] font-bold hover:text-[#111]">Forgot password?</Link>
               </div>
-              <div className="relative">
-                <input
-                  id="login-password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition-all duration-200 pr-12"
+              <div className="relative group">
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  name="password" 
+                  value={form.password} 
+                  onChange={handleChange} 
+                  placeholder="••••••••" 
+                  className="w-full bg-white border border-gray-200 rounded-xl px-5 py-4 focus:shadow-[0_0_0_4px_rgba(66,124,255,0.1)] focus:border-[#427CFF] transition-all outline-none" 
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors p-1"
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)} 
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#427CFF] transition-colors"
                 >
-                  <EyeIcon open={showPassword} />
+                  <Icon path={showPassword ? icons.eyeOff : icons.eye} size={18} />
                 </button>
               </div>
             </div>
@@ -155,24 +119,90 @@ const LoginPage = () => {
               id="login-submit"
               type="submit"
               disabled={loading}
-              className="w-full bg-gray-900 text-white font-semibold text-sm py-3 rounded-xl hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="w-full h-14 bg-[#427CFF] text-white font-black rounded-xl hover:bg-blue-600 active:scale-[0.98] transition-all mt-4 box-border shadow-lg shadow-blue-200/50"
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Signing in...
-                </span>
-              ) : 'Sign In'}
+              {loading ? "AUTHENTICATING..." : "Sign In"}
             </button>
           </form>
 
-          <div className="mt-7 pt-6 border-t border-gray-200 text-center">
-            <p className="text-gray-500 text-sm">
-              Don&apos;t have an account?{' '}
-              <Link to="/register" className="text-gray-900 font-semibold hover:underline underline-offset-2 transition-all">
-                Create one
-              </Link>
+          <div className="mt-12 text-center">
+            <p className="text-gray-400 font-medium text-sm">
+              Don't have an account? <Link to="/register" className="text-[#427CFF] font-extrabold hover:underline underline-offset-4 decoration-2">Create Account</Link>
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Sellora-Style Indigo with Mockup */}
+      <div className="hidden lg:flex w-[45%] bg-[#427CFF] p-16 flex-col justify-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+           <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+           <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+        </div>
+
+        <div className="relative z-10 space-y-8 mb-20 px-8">
+          <h2 className="text-white text-6xl font-black leading-[1.05] tracking-tight">
+            Instant Booking. <br /> Expert Consultations.
+          </h2>
+          <p className="text-white/60 text-lg font-medium max-w-sm">
+            Schedule appointments in seconds and connect with experienced doctors through our high-performance telemedicine portal.
+          </p>
+        </div>
+
+        {/* Dashboard Mockup Visual */}
+        <div className="relative z-10 w-full aspect-[4/3] bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.25)] p-8 flex flex-col gap-6 overflow-hidden border border-white/20">
+          <div className="flex items-center justify-between mb-2">
+            <div className="h-8 w-32 bg-gray-50/50 rounded-xl flex items-center justify-center px-4">
+               <div className="h-1.5 w-full bg-gray-100 rounded-full" />
+            </div>
+            <div className="flex gap-2">
+              <div className="w-8 h-8 rounded-full bg-gray-50" />
+              <div className="w-8 h-8 rounded-full bg-gray-50" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+             <div className="h-32 bg-blue-500 rounded-3xl p-4 flex flex-col justify-between">
+                <div className="w-6 h-6 rounded-lg bg-white/20" />
+                <div className="space-y-1">
+                   <div className="h-1.5 w-12 bg-white/30 rounded-full" />
+                   <div className="h-6 w-16 bg-white rounded-md" />
+                </div>
+             </div>
+             <div className="h-32 bg-gray-50 rounded-3xl p-4 flex flex-col justify-between">
+                <div className="w-6 h-6 rounded-lg bg-gray-100" />
+                <div className="space-y-1">
+                   <div className="h-1.5 w-12 bg-gray-200 rounded-full" />
+                   <div className="h-6 w-16 bg-gray-100 rounded-md" />
+                </div>
+             </div>
+             <div className="h-32 bg-purple-50 rounded-3xl p-4 flex flex-col justify-between">
+                <div className="w-6 h-6 rounded-lg bg-white" />
+                <div className="space-y-1">
+                   <div className="h-1.5 w-12 bg-purple-200 rounded-full" />
+                   <div className="h-6 w-16 bg-purple-500/20 rounded-md" />
+                </div>
+             </div>
+          </div>
+
+          <div className="flex-1 bg-gray-50 rounded-[2rem] p-6 space-y-4">
+             <div className="h-3 w-40 bg-gray-100 rounded-full" />
+             <div className="grid grid-cols-2 gap-4">
+                <div className="h-24 bg-white rounded-2xl p-4 flex flex-col gap-3">
+                   <div className="flex gap-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-50" />
+                      <div className="h-1.5 w-16 bg-gray-50 mt-2" />
+                   </div>
+                   <div className="h-1.5 w-full bg-gray-100" />
+                </div>
+                <div className="h-24 bg-white rounded-2xl p-4 flex flex-col gap-3">
+                   <div className="flex gap-2">
+                      <div className="w-6 h-6 rounded-full bg-emerald-50" />
+                      <div className="h-1.5 w-16 bg-gray-50 mt-2" />
+                   </div>
+                   <div className="h-1.5 w-full bg-gray-100" />
+                </div>
+             </div>
           </div>
         </div>
       </div>

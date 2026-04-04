@@ -10,114 +10,119 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-white pt-24 pb-12 border-t border-gray-50">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 mb-20">
+    <footer className="bg-white text-[#111] pt-32 pb-16 overflow-hidden relative border-t border-gray-100">
+      {/* Background Decorative Element */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/[0.03] rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
+      
+      <div className="max-w-8xl mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
+        
+        {/* Massive Hero Branding Part */}
+        <div className="mb-32">
+           <Link to="/" className="inline-block group relative">
+             <span className="text-[12vw] font-black tracking-[-0.05em] leading-[0.8] transition-all duration-1000 group-hover:tracking-[-0.08em] block translate-x-[-1vw] text-[#111]">
+               BioGrid<span className="text-blue-500">.</span>
+             </span>
+             <p className="mt-8 text-[11px] font-black uppercase tracking-[0.6em] text-gray-300 ml-2">The Future of Healthcare Infrastructure</p>
+           </Link>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 pb-24 border-b border-gray-100">
           
-          {/* Left Section: Logo & CTA */}
-          <div className="space-y-10">
-            <Link to="/" className="inline-block group">
-              <span className="text-7xl md:text-8xl font-black text-gray-900 tracking-tighter hover:text-gray-800 transition-colors">
-                ApexEHR
-              </span>
-            </Link>
-            
-            <div className="space-y-6">
-              <p className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em]">
-                Experience the Future of Healthcare with ApexEHR
+          {/* Left: About & Stats */}
+          <div className="lg:col-span-5 space-y-12">
+            <div className="max-w-md space-y-8">
+              <h3 className="text-3xl font-black tracking-tighter italic leading-tight text-[#111]">Empowering clinicians with high-performance digital terminals.</h3>
+              <p className="text-gray-500 font-medium leading-relaxed">
+                BioGrid is a next-generation clinical operating system designed to eliminate technical friction between doctors and patients through seamless biometric synchronization and diagnostic automation.
               </p>
-              
-              <div className="flex flex-wrap items-center gap-6">
-                <Link
-                  to="/register"
-                  className="flex items-center gap-3 px-8 py-4 bg-gray-900 text-white font-black rounded-full hover:bg-gray-800 transition-all shadow-2xl shadow-gray-900/10 active:scale-95 group"
-                >
-                  <div className="w-6 h-6 bg-white text-gray-900 rounded-full flex items-center justify-center transition-transform group-hover:translate-x-1">
-                    <Icon path={<polyline points="9 18 15 12 9 6" />} size={12} />
-                  </div>
-                  Get started
-                </Link>
-                
-                <button className="flex items-center gap-3 text-[12px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors group">
-                  <div className="w-5 h-5 flex items-center justify-center text-gray-300 group-hover:text-blue-500 transition-colors">
-                    <Icon path={<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />} size={14} />
-                  </div>
-                  Request a demo
-                </button>
-              </div>
             </div>
-          </div>
-
-          {/* Right Section: Links Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 lg:gap-8">
             
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 mb-8">Quick Links</h4>
-              <ul className="space-y-5">
-                {['Home', 'Features', 'Pricing', 'Contact'].map((item) => (
-                  <li key={item}>
-                    <Link 
-                      to={item === 'Home' || item === 'Contact' ? '/' : `/${item.toLowerCase()}`} 
-                      className="text-base font-bold text-gray-600 hover:text-gray-900 transition-colors"
-                    >
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex gap-16 pt-4">
+               <div>
+                  <p className="text-[40px] font-black tracking-tighter mb-1 text-[#111]">99.9%</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Uptime SLA</p>
+               </div>
+               <div>
+                  <p className="text-[40px] font-black tracking-tighter mb-1 text-[#111]">256bit</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">AES Vault</p>
+               </div>
             </div>
+          </div>
 
-            {/* Contacts */}
-            <div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 mb-8">Contacts</h4>
-              <ul className="space-y-5 text-base font-bold text-gray-600">
-                <li className="leading-relaxed">
-                  1-6-2 Misuji, Taito-ku<br />
-                  Tokyo 111-0055
-                </li>
-                <li>+9 999 999 999</li>
-                <li>
-                  <a href="mailto:apex@gmail.com" className="hover:text-gray-900 transition-colors">
-                    apex@gmail.com
-                  </a>
-                </li>
-              </ul>
-            </div>
+          {/* Right: Nested Grids */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-8">
+             
+             {/* Ecosystem */}
+             <div>
+               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-10">Ecosystem</h4>
+               <ul className="space-y-5">
+                 {['Home', 'Doctors', 'Features', 'Contact'].map((item) => (
+                   <li key={item}>
+                     <Link to={item === 'Home' ? '/' : `/${item.toLowerCase()}`} className="text-sm font-bold text-gray-400 hover:text-[#111] transition-all hover:translate-x-1 inline-block">
+                       {item}
+                     </Link>
+                   </li>
+                 ))}
+               </ul>
+             </div>
 
-            {/* Social */}
-            <div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 mb-8">Social</h4>
-              <div className="flex items-center gap-4">
-                {[
-                  { name: 'facebook', path: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /> },
-                  { name: 'twitter', path: <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" /> },
-                  { name: 'linkedin', path: <><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></> }
-                ].map((social) => (
-                  <a
-                    key={social.name}
-                    href="#"
-                    className="w-12 h-12 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all group"
-                  >
-                    <Icon path={social.path} size={18} />
-                  </a>
-                ))}
-              </div>
-            </div>
+             {/* Support */}
+             <div>
+               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-200 mb-10">Support</h4>
+               <ul className="space-y-6 text-sm font-medium text-gray-400">
+                 <li className="flex flex-col gap-1">
+                   <span className="text-[9px] font-black uppercase tracking-widest text-gray-200">Location</span>
+                   1-6-2 Misuji, Taito-ku<br />Tokyo 111-0055
+                 </li>
+                 <li className="flex flex-col gap-1">
+                   <span className="text-[9px] font-black uppercase tracking-widest text-gray-200">Inquiries</span>
+                   biogrid@gmail.com
+                 </li>
+               </ul>
+             </div>
+
+             {/* Connect */}
+             <div className="space-y-10">
+               <div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-200 mb-10">Connect</h4>
+                  <div className="flex flex-wrap gap-4">
+                    {[
+                      { n: 'fb', p: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /> },
+                      { n: 'tw', p: <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" /> },
+                      { n: 'li', p: <><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></> }
+                    ].map((s) => (
+                      <a key={s.n} href="#" className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-gray-900 hover:text-white transition-all hover:-translate-y-1">
+                        <Icon path={s.p} size={20} />
+                      </a>
+                    ))}
+                  </div>
+               </div>
+               
+               <div className="p-1 bg-gray-50 rounded-2xl border border-gray-100">
+                  <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="w-full py-4 text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-[#111] transition-colors">
+                     Back to Top ↑
+                  </button>
+               </div>
+             </div>
 
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-12 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex gap-10">
-            <Link to="/terms" className="text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors">Terms of use</Link>
-            <Link to="/privacy" className="text-xs font-bold text-gray-400 hover:text-gray-900 transition-colors">Privacy Policy</Link>
+        {/* Bottom Metadata */}
+        <div className="pt-16 flex flex-col md:flex-row justify-between items-center gap-10">
+          <div className="flex gap-12">
+            {['Terms of Service', 'Privacy Policy', 'Cookie Compliance'].map(l => (
+               <Link key={l} to="#" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-[#111] transition-colors">{l}</Link>
+            ))}
           </div>
-          <p className="text-xs font-bold text-gray-400">
-            © ApexEHR All Rights Reserved {currentYear}
-          </p>
+          <div className="flex items-center gap-4">
+             <div className="w-2 h-2 bg-green-500 rounded-full" />
+             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400">
+               © BioGrid {currentYear} • All Operations Encrypted
+             </p>
+          </div>
         </div>
+
       </div>
     </footer>
   );

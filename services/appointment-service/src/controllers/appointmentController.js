@@ -1,5 +1,5 @@
 import Appointment from '../models/Appointment.js';
-import AppointmentSession from '../models/Session.js';
+import Session from '../models/Session.js';
 
 // Helper to generate a random 6-character appointment suffix
 const generateAppointmentNumber = () => {
@@ -23,7 +23,7 @@ export const createSession = async (req, res) => {
 
     const { date, startTime, endTime, maxAppointments } = req.body;
 
-    const session = await AppointmentSession.create({
+    const session = await Session.create({
       doctorId: req.body.doctorId || String(rawDoctorId),
       date: new Date(date),
       startTime,
@@ -48,7 +48,7 @@ export const getSessions = async (req, res) => {
     if (date) query.date = new Date(date);
     if (status) query.status = status;
 
-    const sessions = await AppointmentSession.find(query).sort({ date: 1, startTime: 1 });
+    const sessions = await Session.find(query).sort({ date: 1, startTime: 1 });
     res.status(200).json({ success: true, count: sessions.length, data: sessions });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -59,7 +59,7 @@ export const getSessions = async (req, res) => {
 // @route   GET /api/appointments/sessions/:id
 export const getSessionById = async (req, res) => {
   try {
-    const session = await AppointmentSession.findById(req.params.id);
+    const session = await Session.findById(req.params.id);
     if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
     res.status(200).json({ success: true, data: session });
   } catch (error) {
@@ -71,10 +71,10 @@ export const getSessionById = async (req, res) => {
 // @route   PUT /api/appointments/sessions/:id
 export const updateSession = async (req, res) => {
   try {
-    let session = await AppointmentSession.findById(req.params.id);
+    let session = await Session.findById(req.params.id);
     if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
 
-    session = await AppointmentSession.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    session = await Session.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json({ success: true, data: session });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -85,7 +85,7 @@ export const updateSession = async (req, res) => {
 // @route   DELETE /api/appointments/sessions/:id
 export const deleteSession = async (req, res) => {
   try {
-    const session = await AppointmentSession.findById(req.params.id);
+    const session = await Session.findById(req.params.id);
     if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
 
     if (session.currentAppointmentsCount > 0) {
@@ -111,7 +111,7 @@ export const bookAppointment = async (req, res) => {
 
     const { sessionId, reasonForVisit, patientName, patientNIC, patientPhone, appointmentType } = req.body;
 
-    const session = await AppointmentSession.findById(sessionId);
+    const session = await Session.findById(sessionId);
     if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
 
     if (session.status !== 'active') {

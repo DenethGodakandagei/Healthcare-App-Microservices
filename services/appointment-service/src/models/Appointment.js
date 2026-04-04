@@ -16,7 +16,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   sessionId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'AppointmentSession',
+    ref: 'Session',
     required: true
   },
   tokenNumber: {

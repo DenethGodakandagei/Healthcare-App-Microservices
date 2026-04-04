@@ -9,6 +9,10 @@ import BookingPage from './pages/BookingPage';
 import ConfirmBookingPage from './pages/ConfirmBookingPage';
 import PatientDashboard from './pages/patient/PatientDashboard';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
+import Overview from './components/doctor/Overview';
+import History from './components/doctor/History';
+import Availability from './components/doctor/Availability';
+import Credentials from './components/doctor/Credentials';
 import VideoCallPage from './pages/VideoCallPage';
 
 function App() {
@@ -34,7 +38,7 @@ function App() {
             }
           />
 
-          {/* Doctor protected route */}
+          {/* Doctor protected route with nested sub-routes */}
           <Route
             path="/doctor/dashboard"
             element={
@@ -42,7 +46,12 @@ function App() {
                 <DoctorDashboard />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Overview />} />
+            <Route path="history" element={<History />} />
+            <Route path="availability" element={<Availability />} />
+            <Route path="credentials" element={<Credentials />} />
+          </Route>
 
           {/* Video Call (protected - both doctor and patient) */}
           <Route
