@@ -55,9 +55,13 @@ export default function AppointmentBookingWizard({ open, onClose }) {
     setLoading(true);
     setError('');
     try {
-      // Load doctors first (critical)
+      // Load doctors first (filter out mock/test data)
       const docsRes = await doctorAPI.getAll();
-      const docs = docsRes.data?.data || [];
+      const docs = (docsRes.data?.data || []).filter(d => 
+        d.firstName && d.lastName && 
+        !d.firstName.toLowerCase().includes('mock') && 
+        !d.firstName.toLowerCase().includes('test')
+      );
       setDoctors(docs);
       const specs = [...new Set(docs.map(d => d.specialty).filter(Boolean))].sort();
       setSpecialties(specs);

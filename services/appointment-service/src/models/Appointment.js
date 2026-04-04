@@ -66,7 +66,7 @@ const appointmentSchema = new mongoose.Schema({
   onlineStatus: {
     type: String,
     enum: ['pending', 'approved', 'declined'],
-    default: 'pending' // Only relevant if appointmentType is 'online'
+    default: 'approved' // Set to approved by default as per user request
   }
 }, { timestamps: true });
 
