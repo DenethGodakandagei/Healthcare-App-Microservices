@@ -33,8 +33,31 @@ const RegisterPage = () => {
     setError('');
   };
 
+  const validate = () => {
+    if (!form.username || !form.email || !form.password || !form.confirmPassword) return 'All core authentication fields are required.';
+    if (form.username.length < 3) return 'Username must be at least 3 characters.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Enter a valid clinical email address.';
+    if (form.password.length < 8) return 'Password must be at least 8 characters for security.';
+    if (form.password !== form.confirmPassword) return 'Passwords do not match. Please verify.';
+    
+    if (form.role === 'doctor') {
+      if (!form.firstName || !form.lastName || !form.specialty || !form.experienceYears || !form.contactNumber || !form.consultationFee) {
+        return 'All doctor profile fields are required to join our network.';
+      }
+      if (Number(form.experienceYears) < 0 || Number(form.consultationFee) < 0) {
+        return 'Experience and Consultation Fee must be valid positive numbers.';
+      }
+    }
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setLoading(true);
     try {
       const user = await register({ username: form.username, email: form.email, password: form.password, role: form.role });
@@ -46,7 +69,7 @@ const RegisterPage = () => {
       }
       navigate(user.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed.');
+      setError(err.response?.data?.message || 'Registration failed. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -57,12 +80,12 @@ const RegisterPage = () => {
       
       {/* Left Panel - Clean White with Form */}
       <div className="flex-1 flex flex-col p-8 lg:p-20 relative">
-        <div className="flex items-center gap-2.5 mb-20">
+        <Link to="/" className="flex items-center gap-2.5 mb-20 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 bg-[#427CFF] rounded-xl flex items-center justify-center text-white">
             <Icon path={icons.plus} size={18} />
           </div>
-          <span className="font-extrabold text-xl tracking-tighter uppercase text-[#111]">ApexEHR</span>
-        </div>
+          <span className="font-extrabold text-xl tracking-tighter uppercase text-[#111]">BioGrid</span>
+        </Link>
 
         <div className="max-w-[480px] w-full mx-auto">
           <div className="mb-10 text-center">
@@ -101,6 +124,39 @@ const RegisterPage = () => {
               <label className="block text-[#64748B] text-[11px] font-bold">Email</label>
               <input name="email" value={form.email} onChange={handleChange} placeholder="name@company.com" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 focus:shadow-[0_0_0_4px_rgba(66,124,255,0.1)] focus:border-[#427CFF] transition-all outline-none" />
             </div>
+
+            {form.role === 'doctor' && (
+              <div className="space-y-5 animate-in slide-in-from-top-4 duration-500">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-[#64748B] text-[11px] font-bold">First Name</label>
+                    <input name="firstName" value={form.firstName} onChange={handleChange} placeholder="John" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 focus:shadow-[0_0_0_4px_rgba(66,124,255,0.1)] focus:border-[#427CFF] transition-all outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-[#64748B] text-[11px] font-bold">Last Name</label>
+                    <input name="lastName" value={form.lastName} onChange={handleChange} placeholder="Doe" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 focus:shadow-[0_0_0_4px_rgba(66,124,255,0.1)] focus:border-[#427CFF] transition-all outline-none" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[#64748B] text-[11px] font-bold">Specialty</label>
+                  <input name="specialty" value={form.specialty} onChange={handleChange} placeholder="Cardiology" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 focus:shadow-[0_0_0_4px_rgba(66,124,255,0.1)] focus:border-[#427CFF] transition-all outline-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-[#64748B] text-[11px] font-bold">Years Experience</label>
+                    <input name="experienceYears" type="number" value={form.experienceYears} onChange={handleChange} placeholder="5" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 focus:shadow-[0_0_0_4px_rgba(66,124,255,0.1)] focus:border-[#427CFF] transition-all outline-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-[#64748B] text-[11px] font-bold">Consultation Fee ($)</label>
+                    <input name="consultationFee" type="number" value={form.consultationFee} onChange={handleChange} placeholder="50" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 focus:shadow-[0_0_0_4px_rgba(66,124,255,0.1)] focus:border-[#427CFF] transition-all outline-none" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[#64748B] text-[11px] font-bold">Contact Number</label>
+                  <input name="contactNumber" value={form.contactNumber} onChange={handleChange} placeholder="+1 (555) 000-0000" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 focus:shadow-[0_0_0_4px_rgba(66,124,255,0.1)] focus:border-[#427CFF] transition-all outline-none" />
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">

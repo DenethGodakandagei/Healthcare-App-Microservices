@@ -30,15 +30,26 @@ const LoginPage = () => {
     setError('');
   };
 
+  const validate = () => {
+    if (!form.email || !form.password) return 'Please provide both your clinical email and password.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'The provided email is not a valid clinical address.';
+    if (form.password.length < 8) return 'Password must be at least 8 characters long for security purposes.';
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email || !form.password) { setError('All fields are required.'); return; }
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setLoading(true);
     try {
       const user = await login(form.email, form.password);
-      navigate(user.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard');
+      navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials.');
+      setError(err.response?.data?.message || 'The credentials you provided are incorrect. Please verify your identity.');
     } finally {
       setLoading(false);
     }
@@ -49,12 +60,12 @@ const LoginPage = () => {
       
       {/* Left Panel - Clean White with Login Form */}
       <div className="flex-1 flex flex-col p-8 lg:p-20 relative">
-        <div className="flex items-center gap-2.5 mb-24">
+        <Link to="/" className="flex items-center gap-2.5 mb-24 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 bg-[#427CFF] rounded-xl flex items-center justify-center text-white">
             <Icon path={icons.plus} size={18} />
           </div>
-          <span className="font-extrabold text-xl tracking-tighter uppercase text-[#111]">ApexEHR</span>
-        </div>
+          <span className="font-extrabold text-xl tracking-tighter uppercase text-[#111]">BioGrid</span>
+        </Link>
 
         <div className="max-w-[480px] w-full mx-auto">
           <div className="mb-12 text-center lg:text-left">

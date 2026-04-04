@@ -61,7 +61,7 @@ const Navbar = () => {
               <Icon path={icons.plus} size={20} />
             </div>
             <span className={`font-semibold text-2xl tracking-tight transition-colors duration-700 ${isHeroMode ? 'text-white drop-shadow-md' : 'text-black/90'
-              }`}>ApexEHR</span>
+              }`}>BioGrid</span>
           </Link>
 
           {/* Desktop Nav */}

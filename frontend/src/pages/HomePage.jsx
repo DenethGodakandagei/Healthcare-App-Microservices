@@ -77,7 +77,7 @@ const HomePage = () => {
             <h1 className="text-3xl md:text-5xl font-black text-white leading-[0.95] tracking-tighter">
               Revolutionize <br />
               Healthcare <br />
-              with <span className="text-white/80">ApexEHR</span>
+              with <span className="text-white/80">BioGrid</span>
             </h1>
 
             <p className="text-lg md:text-xl text-white/70 max-w-xl font-medium leading-relaxed tracking-tight">
@@ -325,7 +325,7 @@ const HomePage = () => {
               <h2 className="text-4xl md:text-6xl font-black text-white leading-[1.05] tracking-tighter">
                 Experience the <br />
                 Future of Healthcare <br />
-                with ApexEHR
+                with BioGrid
               </h2>
               <div className="flex flex-wrap items-center gap-6">
                 <Link
@@ -347,7 +347,7 @@ const HomePage = () => {
               <div className="pt-10 border-t border-white/10 flex flex-wrap gap-10">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Email us</p>
-                  <p className="text-xl font-bold text-white">apex@gmail.com</p>
+                  <p className="text-xl font-bold text-white">biogrid@gmail.com</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Call us</p>

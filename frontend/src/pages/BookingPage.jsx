@@ -177,32 +177,44 @@ const BookingPage = () => {
 
               {sessions.length > 0 ? (
                 <div className="grid sm:grid-cols-2 gap-4">
-                  {sessions.map((sess) => (
-                    <button
-                      key={sess._id}
-                      onClick={() => setSelectedSession(sess)}
-                      className={`text-left p-6 rounded-[2.2rem] border-2 transition-all ${
-                        selectedSession?._id === sess._id 
-                          ? 'bg-gray-900 border-gray-900 text-white shadow-xl shadow-gray-300' 
-                          : 'bg-white border-gray-100 hover:border-gray-900 text-gray-900'
-                      }`}
-                    >
-                       <div className="flex items-center justify-between mb-4">
-                          <div className={`p-2 rounded-xl ${selectedSession?._id === sess._id ? 'bg-white/10' : 'bg-gray-50'}`}>
-                            <Icon path={icons.calendar} size={18} />
-                          </div>
-                          {selectedSession?._id === sess._id && <Icon path={icons.check} size={18} />}
-                       </div>
-                       <p className={`text-sm font-bold uppercase tracking-tighter mb-1 ${selectedSession?._id === sess._id ? 'text-white/60' : 'text-gray-400'}`}>
-                         {new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                       </p>
-                       <p className="text-xl font-extrabold">{sess.startTime} – {sess.endTime}</p>
-                       <div className="mt-4 flex items-center justify-between">
-                          <span className={`text-[10px] font-bold uppercase tracking-widest ${selectedSession?._id === sess._id ? 'text-white/40' : 'text-gray-300'}`}>Availability</span>
-                          <span className="text-xs font-bold">{sess.maxAppointments - sess.currentAppointmentsCount} slots left</span>
-                       </div>
-                    </button>
-                  ))}
+                  {sessions.map((sess) => {
+                    const slotsLeft = sess.maxAppointments - sess.currentAppointmentsCount;
+                    const isFull = slotsLeft <= 0;
+                    const isSelected = selectedSession?._id === sess._id;
+
+                    return (
+                      <button
+                        key={sess._id}
+                        disabled={isFull}
+                        onClick={() => setSelectedSession(sess)}
+                        className={`text-left p-6 rounded-[2.2rem] border-2 transition-all ${
+                          isFull 
+                            ? 'bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed text-gray-300'
+                            : isSelected 
+                              ? 'bg-gray-900 border-gray-900 text-white shadow-xl shadow-gray-300' 
+                              : 'bg-white border-gray-100 hover:border-gray-900 text-gray-900'
+                        }`}
+                      >
+                         <div className="flex items-center justify-between mb-4">
+                            <div className={`p-2 rounded-xl ${isSelected ? 'bg-white/10' : 'bg-gray-50'}`}>
+                              <Icon path={icons.calendar} size={18} />
+                            </div>
+                            {isSelected && <Icon path={icons.check} size={18} />}
+                            {isFull && <div className="text-[9px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Sold Out</div>}
+                         </div>
+                         <p className={`text-sm font-bold uppercase tracking-tighter mb-1 ${isSelected ? 'text-white/60' : 'text-gray-400'}`}>
+                           {new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                         </p>
+                         <p className={`text-xl font-extrabold ${isFull ? 'text-gray-300' : ''}`}>{sess.startTime} – {sess.endTime}</p>
+                         <div className="mt-4 flex items-center justify-between">
+                            <span className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'text-white/40' : 'text-gray-300'}`}>Availability</span>
+                            <span className={`text-xs font-bold ${isFull ? 'text-red-500' : ''}`}>
+                              {isFull ? '0 slots left' : `${slotsLeft} slots left`}
+                            </span>
+                         </div>
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="bg-white border border-gray-100 rounded-[3rem] p-16 text-center shadow-sm">
