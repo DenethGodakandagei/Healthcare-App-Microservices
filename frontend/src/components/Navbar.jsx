@@ -38,12 +38,34 @@ const Navbar = () => {
     navigate('/');
   };
 
+  useEffect(() => {
+    const hash = location.hash;
+    if (hash) {
+      const element = document.getElementById(hash.substring(1));
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [location]);
+
+  const handleNavClick = (e, path) => {
+    if (path.startsWith('/#')) {
+      if (location.pathname === '/') {
+        e.preventDefault();
+        const element = document.getElementById(path.substring(2));
+        if (element) element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    setMobileMenuOpen(false);
+  };
+
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Doctors', path: '/doctors' },
-    { name: 'Features', path: '/features' },
-    { name: 'Pricing', path: '/pricing' },
-    { name: 'Contact', path: '/contact' },
+    { name: 'Features', path: '/#features' },
+    { name: 'Contact', path: '/#contact' },
   ];
 
   const dashboardPath = user?.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard';
@@ -70,6 +92,7 @@ const Navbar = () => {
               <Link
                 key={link.path}
                 to={link.path}
+                onClick={(e) => handleNavClick(e, link.path)}
                 className={`text-[15px] font-semibold tracking-wide transition-all duration-500 ${isHeroMode
                     ? 'text-white hover:text-white/80 [text-shadow:_0_1px_4px_rgba(0,0,0,0.4)]'
                     : (location.pathname === link.path ? 'text-black font-semibold' : 'text-black/60 hover:text-black')
@@ -160,7 +183,7 @@ const Navbar = () => {
               <Link
                 key={link.path}
                 to={link.path}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => handleNavClick(e, link.path)}
                 className={`px-4 py-3 rounded-xl text-base font-bold transition-colors ${location.pathname === link.path ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-50'
                   }`}
               >

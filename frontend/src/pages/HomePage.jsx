@@ -113,7 +113,7 @@ const HomePage = () => {
       </section>
 
       {/* Features Showcase Section */}
-      <section className="py-24 bg-[#FAFAFC]">
+      <section id="features" className="py-24 bg-[#FAFAFC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto mb-20 space-y-6">
             <div className="inline-block px-4 py-1.5 bg-[#EFF3FF] text-[#427CFF] rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4">
@@ -310,6 +310,7 @@ const HomePage = () => {
           )}
         </div>
       </section>
+
 
       {/* Contact Section - Industrial Blue Box */}
       <section id="contact" className="py-24 max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">

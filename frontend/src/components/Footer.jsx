@@ -56,7 +56,7 @@ const Footer = () => {
              <div>
                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-10">Ecosystem</h4>
                <ul className="space-y-5">
-                 {['Home', 'Doctors', 'Features', 'Pricing', 'Contact'].map((item) => (
+                 {['Home', 'Doctors', 'Features', 'Contact'].map((item) => (
                    <li key={item}>
                      <Link to={item === 'Home' ? '/' : `/${item.toLowerCase()}`} className="text-sm font-bold text-gray-400 hover:text-[#111] transition-all hover:translate-x-1 inline-block">
                        {item}
