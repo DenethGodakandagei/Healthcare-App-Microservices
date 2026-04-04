@@ -57,6 +57,16 @@ const appointmentSchema = new mongoose.Schema({
   },
   notes: {
     type: String
+  },
+  appointmentType: {
+    type: String,
+    enum: ['physical', 'online'],
+    default: 'physical'
+  },
+  onlineStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'declined'],
+    default: 'pending' // Only relevant if appointmentType is 'online'
   }
 }, { timestamps: true });
 

@@ -1,5 +1,13 @@
 import mongoose from 'mongoose';
 
+const chatMessageSchema = new mongoose.Schema({
+  sender: { type: String, required: true }, // 'doctor' or 'patient'
+  senderId: { type: String, required: true },
+  senderName: { type: String },
+  message: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now }
+});
+
 const telemedicineSessionSchema = new mongoose.Schema({
   appointmentId: {
     type: String,
@@ -12,6 +20,12 @@ const telemedicineSessionSchema = new mongoose.Schema({
   doctorId: {
     type: String,
     required: true
+  },
+  patientName: {
+    type: String
+  },
+  doctorName: {
+    type: String
   },
   channelName: {
     type: String,
@@ -31,7 +45,8 @@ const telemedicineSessionSchema = new mongoose.Schema({
   },
   notes: {
     type: String
-  }
+  },
+  chatMessages: [chatMessageSchema]
 }, { timestamps: true });
 
 const TelemedicineSession = mongoose.model('TelemedicineSession', telemedicineSessionSchema);
