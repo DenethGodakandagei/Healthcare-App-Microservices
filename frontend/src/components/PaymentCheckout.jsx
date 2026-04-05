@@ -68,17 +68,22 @@ const PaymentCheckout = ({ appointment, doctor, onShowSuccess, onCancel }) => {
     setError(null);
 
     try {
+      console.log("Confirming payment for order:", orderId);
       // Process payment through backend
-      await paymentAPI.confirm({
+      const res = await paymentAPI.confirm({
         paymentId: orderId,
         status: 'completed',
         cardLast4: cardNumber.replace(/\s/g, '').slice(-4),
       });
 
+      console.log("Payment confirmation response:", res.data);
+
       // Payment succeeded — tell parent to book the appointment
-      onShowSuccess(orderId);
+      await onShowSuccess(orderId);
     } catch (err) {
-      setError(err?.response?.data?.message || "Payment processing failed. Please try again.");
+      console.error("Payment confirmation error:", err);
+      const errorMsg = err?.response?.data?.message || err.message || "Payment processing failed. Please try again.";
+      setError(errorMsg);
       setLoading(false);
     }
   };

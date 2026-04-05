@@ -1091,7 +1091,8 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
               setStep('success'); // advance the UI cleanly
             } catch (err) {
               console.error("Booking failed after payment:", err);
-              setError("Payment was successful but system sync failed. Please contact support.");
+              const msg = err?.response?.data?.message || err.message;
+              setError("Booking sync failed: " + msg);
               setStep('confirm');
             }
           }}

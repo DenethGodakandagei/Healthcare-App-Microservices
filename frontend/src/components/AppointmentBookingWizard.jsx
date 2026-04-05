@@ -459,7 +459,8 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                     setCreatedAppointment(booked);
                     setStep(6);
                   } catch (err) {
-                    setError('Booking system sync failed after payment. Support will contact you.');
+                    const msg = err?.response?.data?.message || err.message;
+                    setError('Booking sync failed: ' + msg);
                     setStep(4);
                   }
                 }}

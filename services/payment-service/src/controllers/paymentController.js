@@ -13,6 +13,7 @@ const APPOINTMENT_SERVICE_URL = process.env.APPOINTMENT_SERVICE_URL || 'http://l
 // @route   POST /api/payments/intent
 // @access  Private (Patient)
 export const createPaymentIntent = async (req, res) => {
+  console.log("POST /api/payments/intent:", req.body);
   try {
     const patientId = req.headers['x-user-id'] || 'mock-user-id';
 
@@ -91,6 +92,7 @@ export const handlePayHereNotify = async (req, res) => {
 };
 
 export const confirmPayment = async (req, res) => {
+  console.log("POST /api/payments/confirm:", req.body);
   try {
     const { paymentId, status, appointmentId, cardLast4 } = req.body;
     let payment = await Payment.findById(paymentId);
