@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { telemedicineAPI } from '../services/api';
+import { telemedicineAPI, appointmentAPI } from '../services/api';
 
 /* ─── SVG Icon helper ──────────────────────────────────────────── */
 const Icon = ({ path, size = 20, className = '' }) => (
@@ -74,17 +74,62 @@ const VideoCallPage = () => {
   /* ─── Load session data ───────────────────────────────────────── */
   useEffect(() => {
     const loadSession = async () => {
+      if (!appointmentId) {
+        setError('Appointment ID is required to join a call.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        let res;
-        if (appointmentId) {
-          res = await telemedicineAPI.getSessionByAppointment(appointmentId);
+        setLoading(true);
+        // 1. Try to get existing session
+        try {
+          const res = await telemedicineAPI.getSessionByAppointment(appointmentId);
+          if (res.data?.success) {
+            setSession(res.data.data);
+            setLoading(false);
+            return;
+          }
+        } catch (sessionErr) {
+          // If 404, we continue to create it
+          if (sessionErr.response?.status !== 404) {
+             throw sessionErr;
+          }
         }
-        if (res?.data?.success) {
-          setSession(res.data.data);
+
+        // 2. If not found, load appointment details to create session
+        const aptRes = await appointmentAPI.getById(appointmentId);
+        const apt = aptRes.data?.data;
+
+        if (!apt) {
+          setError('Appointment not found.');
+          setLoading(false);
+          return;
+        }
+
+        if (apt.appointmentType !== 'online') {
+          setError('This is not an online appointment.');
+          setLoading(false);
+          return;
+        }
+
+        // 3. Create the session
+        const createRes = await telemedicineAPI.createSession({
+          appointmentId: apt._id,
+          patientId: apt.patientId,
+          doctorId: apt.doctorId,
+          patientName: apt.patientName || 'Patient',
+          doctorName: apt.doctor?.lastName ? `Dr. ${apt.doctor.lastName}` : 'Doctor'
+        });
+
+        if (createRes.data?.success) {
+          setSession(createRes.data.data);
         } else {
-          setError('Session not found. Please ensure the appointment has been approved.');
+          setError('Failed to initialize video session.');
         }
+
       } catch (err) {
+        console.error('Video error:', err);
         setError('Failed to load session details. ' + (err?.response?.data?.message || ''));
       } finally {
         setLoading(false);

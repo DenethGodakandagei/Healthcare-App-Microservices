@@ -16,6 +16,7 @@ export default function AppointmentBookingWizard({ open, onClose }) {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [patient, setPatient] = useState({ name: '', nic: '', phone: '', reason: '' });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -54,9 +55,13 @@ export default function AppointmentBookingWizard({ open, onClose }) {
     setLoading(true);
     setError('');
     try {
-      // Load doctors first (critical)
+      // Load doctors first (filter out mock/test data)
       const docsRes = await doctorAPI.getAll();
-      const docs = docsRes.data?.data || [];
+      const docs = (docsRes.data?.data || []).filter(d => 
+        d.firstName && d.lastName && 
+        !d.firstName.toLowerCase().includes('mock') && 
+        !d.firstName.toLowerCase().includes('test')
+      );
       setDoctors(docs);
       const specs = [...new Set(docs.map(d => d.specialty).filter(Boolean))].sort();
       setSpecialties(specs);
@@ -90,6 +95,7 @@ export default function AppointmentBookingWizard({ open, onClose }) {
     setSelectedSpecialty('');
     setSelectedDoctor(null);
     setSelectedSession(null);
+    setSelectedDate(null);
     setCurrentMonth(new Date());
     setPatient(prev => ({ ...prev, nic: '', phone: '', reason: '' }));
     setError('');
@@ -101,7 +107,10 @@ export default function AppointmentBookingWizard({ open, onClose }) {
     if (selectedDoctor) {
       setLoading(true);
       sessionAPI.getAll({ doctorId: selectedDoctor.userId, status: 'active' })
-        .then(res => setSessions(res.data?.data || []))
+        .then(res => {
+          const allSessions = res.data?.data || [];
+          setSessions(allSessions);
+        })
         .catch(err => {
           console.error('Sessions error:', err);
           setSessions([]);
@@ -145,6 +154,7 @@ export default function AppointmentBookingWizard({ open, onClose }) {
         patientName: patient.name,
         patientNIC: patient.nic,
         patientPhone: patient.phone,
+        appointmentType: selectedSession.sessionType === 'online' ? 'online' : 'physical',
       });
       onClose();
       window.location.reload();
@@ -160,7 +170,7 @@ export default function AppointmentBookingWizard({ open, onClose }) {
   const canProceed = {
     1: selectedSpecialty && filteredDoctors.length > 0,
     2: selectedDoctor,
-    3: Object.keys(sessionsByDate).some(key => sessionsByDate[key].length > 0),
+    3: selectedSession,
     4: selectedSession && patient.name && patient.nic && patient.phone
   };
 
@@ -300,20 +310,25 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                         const daySessions = sessionsByDate[key] || [];
                         const isPast = isPastDate(date);
                         const isAvailable = daySessions.length > 0;
-                        const isSelected = selectedSession && new Date(selectedSession.date).toDateString() === key;
+                        const isSelected = selectedDate && selectedDate.toDateString() === key;
 
                         return (
                           <button
                             key={idx}
-                            onClick={() => !isPast && isAvailable && setSelectedSession(daySessions[0])}
+                            onClick={() => {
+                              if (!isPast && isAvailable) {
+                                setSelectedDate(date);
+                                setSelectedSession(null); // Clear session selection when date changes
+                              }
+                            }}
                             disabled={isPast || !isAvailable}
                             className={`aspect-square rounded-md flex flex-col items-center justify-center transition-all text-xs ${
                               isSelected
-                                ? 'bg-green-600 text-white font-semibold'
+                                ? 'bg-gray-900 text-white font-semibold'
                                 : isPast
                                   ? 'bg-purple-50 text-purple-400 cursor-not-allowed border border-purple-100'
                                   : isAvailable
-                                    ? 'bg-white border border-green-500 text-gray-900 hover:bg-green-50 hover:border-green-600 font-medium'
+                                    ? 'bg-white border border-green-500 text-gray-900 hover:bg-green-50 hover:border-green-600 font-medium shadow-sm'
                                     : 'bg-gray-50 text-gray-300 cursor-not-allowed'
                             }`}
                           >
@@ -325,20 +340,45 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                     </div>
                   </div>
 
-                  {selectedSession && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-green-700 font-medium uppercase tracking-wide mb-0.5">Selected Time</p>
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {new Date(selectedSession.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • {selectedSession.startTime} - {selectedSession.endTime}
-                          </p>
-                        </div>
-                        <div className="text-right ml-3">
-                          <p className="text-[10px] text-green-700 font-medium uppercase tracking-wide mb-0.5">Slots left</p>
-                          <p className="font-bold text-green-700 text-base">{selectedSession.maxAppointments - selectedSession.currentAppointmentsCount}</p>
-                        </div>
+                  {selectedDate && (
+                    <div className="space-y-2 mt-4">
+                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Available Slots ({selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })})</h4>
+                      <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-1">
+                        {sessionsByDate[selectedDate.toDateString()]?.map(sess => (
+                          <button
+                            key={sess._id}
+                            onClick={() => setSelectedSession(sess)}
+                            className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                              selectedSession?._id === sess._id
+                                ? 'border-green-600 bg-green-50'
+                                : 'border-gray-100 hover:border-gray-200 bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`p-1.5 rounded-lg ${sess.sessionType === 'online' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600'}`}>
+                                <Icon path={sess.sessionType === 'online' ? <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></> : <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} size={14} />
+                              </div>
+                              <div className="text-left">
+                                <p className="text-sm font-bold text-gray-900">{sess.startTime} – {sess.endTime}</p>
+                                <p className={`text-[10px] font-black uppercase tracking-tight ${sess.sessionType === 'online' ? 'text-purple-500' : 'text-gray-400'}`}>
+                                  {sess.sessionType === 'online' ? 'Video Call' : 'In-Person'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[10px] font-bold text-gray-400 uppercase">Available</p>
+                              <p className="text-xs font-bold text-gray-900">{sess.maxAppointments - sess.currentAppointmentsCount} slots</p>
+                            </div>
+                          </button>
+                        ))}
                       </div>
+                    </div>
+                  )}
+
+                  {!selectedDate && Object.keys(sessionsByDate).length === 0 && !loading && (
+                    <div className="p-10 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                      <p className="text-gray-500 text-sm">No available sessions found for this doctor.</p>
+                      <button onClick={() => setStep(2)} className="text-xs text-blue-600 hover:underline mt-2">Choose another doctor</button>
                     </div>
                   )}
                 </>

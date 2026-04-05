@@ -21,13 +21,14 @@ export const createSession = async (req, res) => {
     const rawDoctorId = req.headers['x-user-id']; 
     if (!rawDoctorId) return res.status(401).json({ success: false, message: 'Unauthorized, x-user-id missing' });
 
-    const { date, startTime, endTime, maxAppointments } = req.body;
+    const { date, startTime, endTime, maxAppointments, sessionType } = req.body;
 
     const session = await Session.create({
       doctorId: req.body.doctorId || String(rawDoctorId),
       date: new Date(date),
       startTime,
       endTime,
+      sessionType: sessionType || 'offline',
       maxAppointments: maxAppointments || 20
     });
 
@@ -168,6 +169,18 @@ export const getDoctorAppointments = async (req, res) => {
     const doctorId = req.headers['x-user-id'];
     const appointments = await Appointment.find({ doctorId }).populate('sessionId').sort({ date: 1 });
     res.status(200).json({ success: true, count: appointments.length, data: appointments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get appointment by ID
+// @route   GET /api/appointments/:id
+export const getAppointmentById = async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id).populate('sessionId');
+    if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
+    res.status(200).json({ success: true, data: appointment });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

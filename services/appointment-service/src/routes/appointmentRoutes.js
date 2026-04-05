@@ -3,6 +3,7 @@ import {
   bookAppointment,
   getPatientAppointments,
   getDoctorAppointments,
+  getAppointmentById,
   updateAppointmentStatus,
   createSession,
   getSessions,
@@ -32,6 +33,9 @@ router.route('/patient')
 
 router.route('/doctor')
   .get(getDoctorAppointments);
+
+router.route('/:id')
+  .get(getAppointmentById);
 
 router.route('/:id/status')
   .put(updateAppointmentStatus);
