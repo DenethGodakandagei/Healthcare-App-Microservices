@@ -80,7 +80,7 @@ const DoctorDashboard = () => {
               <Icon path={icons.plus} size={14} strokeWidth={4} />
             </div>
           </div>
-          <span className="font-black text-xl tracking-tighter text-[#0EA5E9]">MEDSTAR</span>
+          <span className="font-black text-xl tracking-tighter text-[#0EA5E9]">BioGrid</span>
         </Link>
         <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-gray-700">
           <Icon path={icons.x} size={18} />
