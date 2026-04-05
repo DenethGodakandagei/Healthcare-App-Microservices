@@ -50,6 +50,7 @@ const DoctorDashboard = () => {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: 'home', path: '/doctor/dashboard' },
     { id: 'appointments', label: 'Video Consultations', icon: 'calendar', path: '/doctor/dashboard/appointments' },
+    { id: 'physical', label: 'Physical Consultations', icon: 'user', path: '/doctor/dashboard/physical' },
     { id: 'sessions', label: 'Clinic Availability', icon: 'sessions', path: '/doctor/dashboard/availability' },
     { id: 'profile', label: 'Professional Profile', icon: 'shield', path: '/doctor/dashboard/credentials' },
   ];
@@ -155,13 +156,13 @@ const DoctorDashboard = () => {
             </h1>
             <p className="text-[#0EA5E9] text-[10px] font-black uppercase tracking-widest mt-0.5">Doctor Console</p>
           </div>
-          
+
           <div className="flex items-center gap-4">
-             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">On Duty</span>
-             </div>
-             <button className="relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">On Duty</span>
+            </div>
+            <button className="relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100">
               <Icon path={icons.bell} size={20} />
               {pending.length > 0 && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-[#2299C9] rounded-full" />
@@ -174,12 +175,12 @@ const DoctorDashboard = () => {
         <main className="flex-1 p-6 overflow-y-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-64 gap-3 animate-pulse">
-               <div className="w-10 h-10 border-2 border-gray-300 border-t-[#2299C9] rounded-full animate-spin" />
-               <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Updating Clinical Feed...</p>
+              <div className="w-10 h-10 border-2 border-gray-300 border-t-[#2299C9] rounded-full animate-spin" />
+              <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Updating Clinical Feed...</p>
             </div>
           ) : (
             <div className="animate-in fade-in duration-500">
-               <Outlet context={{ user, appointments, profile, pending, confirmed }} />
+              <Outlet context={{ user, appointments, profile, pending, confirmed }} />
             </div>
           )}
         </main>

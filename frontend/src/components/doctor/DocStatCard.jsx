@@ -14,9 +14,9 @@ const DocStatCard = ({ label, value, sub, iconContent, highlight, trend }) => {
           <Icon path={iconContent} />
         </div>
         {trend && (
-           <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${trend.includes('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'}`}>
-             {trend}
-           </div>
+          <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${trend.includes('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-50 text-gray-400'}`}>
+            {trend}
+          </div>
         )}
       </div>
       <p className="text-gray-900 text-2xl font-bold mb-0.5">{value}</p>

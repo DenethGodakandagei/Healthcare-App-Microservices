@@ -237,7 +237,7 @@ const PatientDashboard = () => {
     { id: 'profile', label: 'My Profile', icon: 'user' },
   ];
 
-  const upcoming = appointments.filter((a) => a.status !== 'cancelled' && a.status !== 'completed');
+  const upcoming = appointments.filter((a) => a.status !== 'cancelled' && a.status !== 'completed' && !(a.appointmentType === 'online' || a.sessionId?.sessionType === 'online'));
   const completed = appointments.filter((a) => a.status === 'completed');
 
   const Sidebar = () => (
@@ -352,7 +352,7 @@ const PatientDashboard = () => {
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard label="Upcoming" value={upcoming.length} icon="calendar" sub={`${upcoming.length > 0 ? 'Confirmed' : 'No'} appointments`} />
                     <StatCard label="Completed" value={completed.length} icon="activity" sub={`${completed.length} total visits`} />
-                    <StatCard label="Telemedicine" value={appointments.filter(a => a.appointmentType === 'online').length} icon="video" sub="Online sessions" />
+                    <StatCard label="Telemedicine" value={appointments.filter(a => a.appointmentType === 'online' || a.sessionId?.sessionType === 'online').length} icon="video" sub="Online sessions" />
                     <StatCard label="Prescriptions" value="—" icon="pill" sub="Profile verified" />
                   </div>
 
@@ -384,7 +384,7 @@ const PatientDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-gray-900 text-xl font-bold">Appointments</h2>
-                      <p className="text-gray-500 text-sm mt-0.5">{appointments.length} total appointments</p>
+                      <p className="text-gray-500 text-sm mt-0.5">{appointments.filter(a => !(a.appointmentType === 'online' || a.sessionId?.sessionType === 'online')).length} appointments</p>
                     </div>
                     <button
                       onClick={() => setShowBookingModal(true)}
@@ -402,7 +402,7 @@ const PatientDashboard = () => {
                     </div>
                   ) : (
                     <div className="space-y-1">
-                      {appointments.map((apt) => (
+                      {appointments.filter(a => !(a.appointmentType === 'online' || a.sessionId?.sessionType === 'online')).map((apt) => (
                         <AppointmentCard key={apt._id} apt={apt} doctors={doctors} onCancel={handleCancel} onEdit={handleEdit} />
                       ))}
                     </div>
@@ -653,7 +653,7 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
       setError('Please fill in all required fields.');
       return;
     }
-    
+
     // We only book after payment succeeds
     setPendingAppointment({
       _id: "PENDING",
@@ -776,6 +776,11 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
                                 {apt.startTime && ` at ${apt.startTime}`}
                               </span>
                             </div>
+                            {apt.reasonForVisit && (
+                              <p className="text-[10px] text-gray-500/80 font-medium mt-1 truncate max-w-[250px]">
+                                <span className="text-gray-400 font-bold uppercase tracking-tighter mr-1 text-[9px]">Reason:</span> {apt.reasonForVisit}
+                              </p>
+                            )}
                             {apt.notes && (
                               <div className="mt-2.5 p-2 bg-sky-50/40 border border-sky-300/20 rounded-xl flex items-center gap-2 relative overflow-hidden group/note">
                                 <div className="w-1 absolute left-0 top-0 bottom-0 bg-[#2299C9]" />
@@ -792,6 +797,9 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
                         <div className="flex items-center gap-3 relative z-10 shrink-0">
                           {apt.status !== 'cancelled' ? (
                             <div className="flex items-center gap-2">
+                              {apt.paymentStatus === 'paid' && (
+                                <span className="px-2 py-1 text-[10px] font-black uppercase bg-green-50 text-green-600 border border-green-100 rounded-lg">Paid</span>
+                              )}
                               <button
                                 onClick={() => handleJoinCall(apt)}
                                 className="h-10 px-5 bg-[#2299C9] text-white rounded-xl font-bold text-sm hover:bg-[#1C82AB] transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20"
@@ -1078,7 +1086,7 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
                 paymentStatus: 'paid'
               });
               const bookedApt = bookRes.data?.data;
-              
+
               // 2. Link the payment to the real appointment ID
               await paymentAPI.confirm({
                 paymentId: orderId,
