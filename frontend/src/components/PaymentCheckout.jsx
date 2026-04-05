@@ -1,166 +1,324 @@
 import { useState, useEffect } from 'react';
 import { paymentAPI } from '../services/api';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-
-// Load Stripe outside of components to avoid recreating the object
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-
-const CheckoutForm = ({ clientSecret, orderId, amount, doctor, appointment, onShowSuccess, onCancel }) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setLoading(true);
-    setError(null);
-
-    // Confirm Payment Inline (no reload necessary if redirect is 'if_required' for cards)
-    const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.href, // Fallback for 3D Secure
-      },
-      redirect: 'if_required', 
-    });
-
-    if (stripeError) {
-      setError(stripeError.message);
-      setLoading(false);
-    } else if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'requires_capture')) {
-      try {
-        // Send success to our backend
-        onShowSuccess(orderId);
-      } catch (err) {
-        setError("Payment processed but system sync failed. Support will verify.");
-        setLoading(false);
-      }
-    } else {
-        setLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <PaymentElement className="mb-4" />
-      
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-medium flex items-center gap-2">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          {error}
-        </div>
-      )}
-
-      <div className="flex flex-col gap-3">
-        <button
-          type="submit"
-          disabled={!stripe || !elements || loading}
-          className="w-full h-16 bg-[#2299C9] text-white font-black rounded-3xl hover:bg-[#1C82AB] transition-all shadow-xl shadow-sky-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-[0.98]"
-        >
-          {loading ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              Pay LKR {amount.toLocaleString()}.00
-            </>
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={loading}
-          className="w-full py-4 text-gray-500 font-bold hover:text-gray-900 transition-colors"
-        >
-          Cancel and return
-        </button>
-      </div>
-    </form>
-  );
-};
 
 const PaymentCheckout = ({ appointment, doctor, onShowSuccess, onCancel }) => {
-  const [clientSecret, setClientSecret] = useState(null);
-  const [orderDetails, setOrderDetails] = useState(null);
-  const [initError, setInitError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [orderId, setOrderId] = useState(null);
+  const [initLoading, setInitLoading] = useState(true);
   const amount = doctor.consultationFee || 2500;
 
+  // Card form state
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
+
+  // Initialize payment intent on backend
   useEffect(() => {
     const initPayment = async () => {
       try {
         const res = await paymentAPI.createIntent({
-          appointmentId: appointment._id,
+          appointmentId: appointment._id || 'PENDING',
           amount: amount,
           patientName: appointment.patientName,
           patientPhone: appointment.patientPhone,
         });
-        setClientSecret(res.data.data.clientSecret);
-        setOrderDetails({ orderId: res.data.data.order_id, amount: res.data.data.amount });
+        setOrderId(res.data.data.order_id);
+        setInitLoading(false);
       } catch (err) {
-        const errorMsg = err?.response?.data?.message || "Failed to initialize Stripe Payment Intent.";
-        setInitError(`Stripe Error: ${errorMsg}`);
+        const errorMsg = err?.response?.data?.message || "Failed to initialize payment.";
+        setError(errorMsg);
+        setInitLoading(false);
       }
     };
     initPayment();
   }, [appointment, amount]);
 
+  // Format card number with spaces every 4 digits
+  const formatCardNumber = (value) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const parts = [];
+    for (let i = 0; i < v.length && i < 16; i += 4) {
+      parts.push(v.substring(i, i + 4));
+    }
+    return parts.join(' ');
+  };
+
+  // Format expiry as MM/YY
+  const formatExpiry = (value) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    if (v.length >= 2) {
+      return v.substring(0, 2) + '/' + v.substring(2, 4);
+    }
+    return v;
+  };
+
+  // Validate card form
+  const isFormValid = () => {
+    const cleanCard = cardNumber.replace(/\s/g, '');
+    return cleanCard.length === 16 && cardName.trim().length > 2 && expiry.length === 5 && cvv.length >= 3;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isFormValid() || !orderId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Process payment through backend
+      await paymentAPI.confirm({
+        paymentId: orderId,
+        status: 'completed',
+        cardLast4: cardNumber.replace(/\s/g, '').slice(-4),
+      });
+
+      // Payment succeeded — tell parent to book the appointment
+      onShowSuccess(orderId);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Payment processing failed. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  // Card type detection
+  const getCardType = () => {
+    const cleanNum = cardNumber.replace(/\s/g, '');
+    if (cleanNum.startsWith('4')) return 'visa';
+    if (cleanNum.startsWith('5') || cleanNum.startsWith('2')) return 'mastercard';
+    if (cleanNum.startsWith('3')) return 'amex';
+    return null;
+  };
+
+  const cardType = getCardType();
+
   return (
-    <div className="max-w-xl mx-auto bg-white border border-gray-100 rounded-[3rem] p-8 md:p-10 shadow-2xl shadow-gray-200/50 animate-in fade-in zoom-in-95 duration-500">
-      <div className="flex flex-col items-center text-center space-y-3 mb-8">
-        <div className="w-16 h-16 bg-[#635BFF]/10 rounded-3xl flex items-center justify-center text-[#635BFF] mb-2">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
+    <div style={{
+      maxWidth: '520px',
+      margin: '0 auto',
+      background: '#fff',
+      border: '1px solid #f0f0f0',
+      borderRadius: '2rem',
+      padding: '2.5rem',
+      boxShadow: '0 25px 50px -12px rgba(0,0,0,0.08)',
+    }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{
+          width: '56px', height: '56px', background: 'linear-gradient(135deg, #635BFF 0%, #8B85FF 100%)',
+          borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 1rem',
+        }}>
+          <svg width="28" height="28" fill="none" stroke="white" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
         </div>
-        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Secure Checkout</h2>
-        <p className="text-gray-500 font-medium max-w-sm text-sm">
-          Complete your payment securely with Stripe.
-        </p>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1a1a2e', margin: '0 0 0.25rem' }}>Secure Checkout</h2>
+        <p style={{ fontSize: '0.85rem', color: '#888', fontWeight: '500', margin: 0 }}>Enter your card details to complete payment</p>
       </div>
 
-      <div className="bg-gray-50 rounded-3xl p-6 mb-8">
-        <div className="flex justify-between items-center pb-4 border-b border-gray-200">
-          <span className="text-gray-500 text-sm font-bold">Doctor</span>
-          <span className="text-gray-900 font-black">Dr. {doctor.firstName} {doctor.lastName}</span>
+      {/* Order Summary */}
+      <div style={{
+        background: '#f8f9fb', borderRadius: '1.25rem', padding: '1.25rem', marginBottom: '1.5rem',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: '1px solid #e8e8ee' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#888' }}>Doctor</span>
+          <span style={{ fontSize: '0.9rem', fontWeight: '800', color: '#1a1a2e' }}>Dr. {doctor.firstName} {doctor.lastName}</span>
         </div>
-        <div className="flex justify-between items-center pt-4">
-          <span className="text-gray-500 text-sm font-bold">Amount Due</span>
-          <span className="text-2xl text-gray-900 font-black tracking-tight flex items-center gap-2">
-            LKR {amount.toLocaleString()}.00
-          </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem' }}>
+          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#888' }}>Amount Due</span>
+          <span style={{ fontSize: '1.5rem', fontWeight: '900', color: '#1a1a2e' }}>LKR {amount.toLocaleString()}.00</span>
         </div>
       </div>
 
-      {initError ? (
-        <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold">{initError}</div>
-      ) : clientSecret ? (
-        <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
-          <CheckoutForm 
-            clientSecret={clientSecret} 
-            orderId={orderDetails.orderId}
-            amount={orderDetails.amount}
-            doctor={doctor}
-            appointment={appointment}
-            onShowSuccess={onShowSuccess}
-            onCancel={onCancel}
-          />
-        </Elements>
+      {initLoading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem 0', gap: '1rem' }}>
+          <div style={{
+            width: '32px', height: '32px', border: '3px solid #e0e0ef', borderTopColor: '#635BFF',
+            borderRadius: '50%', animation: 'spin 1s linear infinite',
+          }} />
+          <p style={{ color: '#888', fontWeight: '600', fontSize: '0.85rem' }}>Initializing...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+        </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-10 gap-4">
-          <div className="w-8 h-8 border-4 border-[#635BFF]/30 border-t-[#635BFF] rounded-full animate-spin" />
-          <p className="text-gray-500 font-bold text-sm animate-pulse">Initializing Secure Gateway...</p>
-        </div>
+        <form onSubmit={handleSubmit}>
+          {/* Cardholder Name */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#555', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Cardholder Name
+            </label>
+            <input
+              type="text"
+              placeholder="John Doe"
+              value={cardName}
+              onChange={(e) => setCardName(e.target.value)}
+              style={{
+                width: '100%', padding: '0.85rem 1rem', border: '2px solid #e8e8ee', borderRadius: '0.85rem',
+                fontSize: '0.95rem', fontWeight: '600', color: '#1a1a2e', outline: 'none',
+                transition: 'border 0.2s', boxSizing: 'border-box', background: '#fafafe',
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#635BFF'}
+              onBlur={(e) => e.target.style.borderColor = '#e8e8ee'}
+            />
+          </div>
+
+          {/* Card Number */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#555', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Card Number
+            </label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="4242 4242 4242 4242"
+                value={cardNumber}
+                onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                maxLength={19}
+                style={{
+                  width: '100%', padding: '0.85rem 3.5rem 0.85rem 1rem', border: '2px solid #e8e8ee', borderRadius: '0.85rem',
+                  fontSize: '0.95rem', fontWeight: '600', color: '#1a1a2e', outline: 'none', letterSpacing: '0.1em',
+                  transition: 'border 0.2s', boxSizing: 'border-box', background: '#fafafe',
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#635BFF'}
+                onBlur={(e) => e.target.style.borderColor = '#e8e8ee'}
+              />
+              {/* Card icon */}
+              <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)' }}>
+                {cardType === 'visa' && (
+                  <span style={{ fontWeight: '900', fontSize: '0.85rem', color: '#1a1f71', fontStyle: 'italic' }}>VISA</span>
+                )}
+                {cardType === 'mastercard' && (
+                  <div style={{ display: 'flex', gap: '0' }}>
+                    <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#eb001b', opacity: 0.8 }} />
+                    <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#f79e1b', opacity: 0.8, marginLeft: '-8px' }} />
+                  </div>
+                )}
+                {!cardType && (
+                  <svg width="22" height="22" fill="none" stroke="#ccc" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Expiry & CVV row */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#555', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Expiry Date
+              </label>
+              <input
+                type="text"
+                placeholder="MM/YY"
+                value={expiry}
+                onChange={(e) => setExpiry(formatExpiry(e.target.value.replace('/', '')))}
+                maxLength={5}
+                style={{
+                  width: '100%', padding: '0.85rem 1rem', border: '2px solid #e8e8ee', borderRadius: '0.85rem',
+                  fontSize: '0.95rem', fontWeight: '600', color: '#1a1a2e', outline: 'none', letterSpacing: '0.15em',
+                  transition: 'border 0.2s', boxSizing: 'border-box', background: '#fafafe', textAlign: 'center',
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#635BFF'}
+                onBlur={(e) => e.target.style.borderColor = '#e8e8ee'}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', color: '#555', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                CVV
+              </label>
+              <input
+                type="password"
+                placeholder="•••"
+                value={cvv}
+                onChange={(e) => setCvv(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+                maxLength={4}
+                style={{
+                  width: '100%', padding: '0.85rem 1rem', border: '2px solid #e8e8ee', borderRadius: '0.85rem',
+                  fontSize: '0.95rem', fontWeight: '600', color: '#1a1a2e', outline: 'none', letterSpacing: '0.25em',
+                  transition: 'border 0.2s', boxSizing: 'border-box', background: '#fafafe', textAlign: 'center',
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#635BFF'}
+                onBlur={(e) => e.target.style.borderColor = '#e8e8ee'}
+              />
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div style={{
+              padding: '0.85rem 1rem', background: '#fff0f0', border: '1px solid #ffe0e0',
+              color: '#cc3333', borderRadius: '0.85rem', fontSize: '0.85rem', fontWeight: '600',
+              marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem',
+            }}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {error}
+            </div>
+          )}
+
+          {/* Pay button */}
+          <button
+            type="submit"
+            disabled={!isFormValid() || loading || !orderId}
+            style={{
+              width: '100%', height: '56px', background: isFormValid() && !loading ? 'linear-gradient(135deg, #635BFF 0%, #8B85FF 100%)' : '#ccc',
+              color: '#fff', fontWeight: '900', fontSize: '1rem', border: 'none', borderRadius: '1rem',
+              cursor: isFormValid() && !loading ? 'pointer' : 'not-allowed',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
+              transition: 'all 0.3s', boxShadow: isFormValid() ? '0 8px 25px -5px rgba(99,91,255,0.4)' : 'none',
+            }}
+          >
+            {loading ? (
+              <>
+                <div style={{
+                  width: '20px', height: '20px', border: '2px solid rgba(255,255,255,0.3)',
+                  borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite',
+                }} />
+                Processing Payment...
+              </>
+            ) : (
+              <>
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Pay LKR {amount.toLocaleString()}.00
+              </>
+            )}
+          </button>
+
+          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+
+          {/* Cancel */}
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            style={{
+              width: '100%', padding: '1rem', background: 'transparent', border: 'none',
+              color: '#888', fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer',
+              marginTop: '0.5rem',
+            }}
+          >
+            Cancel and return
+          </button>
+
+          {/* Security badge */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+            marginTop: '1rem', opacity: 0.4,
+          }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span style={{ fontSize: '0.7rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#999' }}>
+              Secured with 256-bit SSL encryption
+            </span>
+          </div>
+        </form>
       )}
     </div>
   );

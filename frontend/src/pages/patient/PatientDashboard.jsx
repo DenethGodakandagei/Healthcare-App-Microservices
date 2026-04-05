@@ -1072,8 +1072,9 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
           onShowSuccess={async (orderId) => {
             try {
               // 1. Create the appointment NOW since payment succeeded
+              const { _id, ...bookingData } = pendingAppointment;
               const bookRes = await appointmentAPI.book({
-                ...pendingAppointment,
+                ...bookingData,
                 paymentStatus: 'paid'
               });
               const bookedApt = bookRes.data?.data;

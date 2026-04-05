@@ -92,7 +92,7 @@ export const handlePayHereNotify = async (req, res) => {
 
 export const confirmPayment = async (req, res) => {
   try {
-    const { paymentId, status, appointmentId } = req.body;
+    const { paymentId, status, appointmentId, cardLast4 } = req.body;
     let payment = await Payment.findById(paymentId);
     if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
 
@@ -102,7 +102,7 @@ export const confirmPayment = async (req, res) => {
 
     if (status === 'completed') {
       payment.status = 'completed';
-      payment.paymentMethod = 'payhere';
+      payment.paymentMethod = cardLast4 ? `card-${cardLast4}` : 'card';
       await payment.save();
 
       // Notify appointment service
