@@ -15,8 +15,16 @@ spec:
       containers:
         - name: patient-service
           image: patient-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4006
+          env:
+            - name: PORT
+              value: "4006"
+            - name: MONGO_URI
+              value: "mongodb://mongodb:27017/patient_db"
+            - name: JWT_SECRET
+              value: "secret"
 ---
 apiVersion: v1
 kind: Service

@@ -15,8 +15,16 @@ spec:
       containers:
         - name: appointment-service
           image: appointment-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4002
+          env:
+            - name: PORT
+              value: "4002"
+            - name: MONGO_URI
+              value: "mongodb://mongodb:27017/appointment_db"
+            - name: JWT_SECRET
+              value: "secret"
 ---
 apiVersion: v1
 kind: Service

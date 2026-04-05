@@ -15,8 +15,16 @@ spec:
       containers:
         - name: doctor-service
           image: doctor-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4003
+          env:
+            - name: PORT
+              value: "4003"
+            - name: MONGO_URI
+              value: "mongodb://mongodb:27017/doctor_db"
+            - name: JWT_SECRET
+              value: "secret"
 ---
 apiVersion: v1
 kind: Service

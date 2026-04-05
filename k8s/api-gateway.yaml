@@ -15,8 +15,30 @@ spec:
       containers:
         - name: api-gateway
           image: api-gateway:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4000
+          env:
+            - name: PORT
+              value: "4000"
+            - name: IDENTITY_SERVICE_URL
+              value: "http://identity-service:4004"
+            - name: PATIENT_SERVICE_URL
+              value: "http://patient-service:4006"
+            - name: DOCTOR_SERVICE_URL
+              value: "http://doctor-service:4003"
+            - name: APPOINTMENT_SERVICE_URL
+              value: "http://appointment-service:4002"
+            - name: NOTIFICATION_SERVICE_URL
+              value: "http://notification-service:4005"
+            - name: PAYMENT_SERVICE_URL
+              value: "http://payment-service:4007"
+            - name: TELEMEDICINE_SERVICE_URL
+              value: "http://telemedicine-service:4008"
+            - name: AI_SYMPTOM_SERVICE_URL
+              value: "http://ai-symptom-service:4001"
+            - name: JWT_SECRET
+              value: "secret"
 ---
 apiVersion: v1
 kind: Service

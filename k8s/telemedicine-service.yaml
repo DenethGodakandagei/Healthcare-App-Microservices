@@ -15,8 +15,16 @@ spec:
       containers:
         - name: telemedicine-service
           image: telemedicine-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4008
+          env:
+            - name: PORT
+              value: "4008"
+            - name: MONGO_URI
+              value: "mongodb://mongodb:27017/telemedicine_db"
+            - name: JWT_SECRET
+              value: "secret"
 ---
 apiVersion: v1
 kind: Service
