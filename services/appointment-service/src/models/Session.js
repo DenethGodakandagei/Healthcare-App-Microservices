@@ -17,6 +17,11 @@ const sessionSchema = new mongoose.Schema({
     type: String,
     required: true // e.g., '10:00'
   },
+  sessionType: {
+    type: String,
+    enum: ['online', 'offline'],
+    default: 'offline'
+  },
   maxAppointments: {
     type: Number,
     default: 20

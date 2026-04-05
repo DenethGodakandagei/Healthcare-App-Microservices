@@ -36,6 +36,7 @@ export const doctorAPI = {
 // Appointments
 export const appointmentAPI = {
   getAll: () => API.get('/appointments'),
+  getById: (id) => API.get(`/appointments/${id}`),
   book: (data) => API.post('/appointments', data),
   updateStatus: (id, data) => API.put(`/appointments/${id}/status`, data),
   cancel: (id) => appointmentAPI.updateStatus(id, { status: 'cancelled' }),

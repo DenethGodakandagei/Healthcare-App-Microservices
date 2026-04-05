@@ -21,6 +21,7 @@ const icons = {
   alert: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
   steth: <><path d="M4.8 2.3A.3.3 0 1 0 5 2a.3.3 0 0 0-.2.3Z"/><path d="M10 22v-2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2"/><path d="M18 14h-4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2ZM22 5V2.5A.5.5 0 0 0 21.5 2h-15A.5.5 0 0 0 6 2.5V5"/><path d="M6 5v.5A2.5 2.5 0 0 0 8.5 8h7A2.5 2.5 0 0 0 18 5.5V5"/></>,
   info: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></>,
+  video: <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></>,
 };
 
 const BookingPage = () => {
@@ -63,7 +64,7 @@ const BookingPage = () => {
       navigate('/login', { state: { from: window.location.pathname } });
       return;
     }
-    navigate(`/confirm-booking/${doctorId}/${selectedSession._id}`);
+    navigate(`/confirm-booking/${doctorId}/${selectedSession._id}?type=${selectedSession.sessionType || 'offline'}`);
   };
 
   if (loading) {
@@ -196,11 +197,17 @@ const BookingPage = () => {
                         }`}
                       >
                          <div className="flex items-center justify-between mb-4">
-                            <div className={`p-2 rounded-xl ${isSelected ? 'bg-white/10' : 'bg-gray-50'}`}>
-                              <Icon path={icons.calendar} size={18} />
+                            <div className={`p-2 rounded-xl ${isSelected ? 'bg-white/10' : sess.sessionType === 'online' ? 'bg-purple-50' : 'bg-gray-50'}`}>
+                              <Icon path={sess.sessionType === 'online' ? icons.video : icons.calendar} size={18} className={sess.sessionType === 'online' && !isSelected ? 'text-purple-500' : ''} />
                             </div>
-                            {isSelected && <Icon path={icons.check} size={18} />}
-                            {isFull && <div className="text-[9px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Sold Out</div>}
+                            <div className="flex items-center gap-2">
+                              {sess.sessionType === 'online' 
+                                ? <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'}`}>Video Call</span>
+                                : <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>In-Person</span>
+                              }
+                              {isSelected && <Icon path={icons.check} size={18} />}
+                              {isFull && <div className="text-[9px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Sold Out</div>}
+                            </div>
                          </div>
                          <p className={`text-sm font-bold uppercase tracking-tighter mb-1 ${isSelected ? 'text-white/60' : 'text-gray-400'}`}>
                            {new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}

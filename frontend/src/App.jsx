@@ -10,7 +10,7 @@ import ConfirmBookingPage from './pages/ConfirmBookingPage';
 import PatientDashboard from './pages/patient/PatientDashboard';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import Overview from './components/doctor/Overview';
-import History from './components/doctor/History';
+import Appointments from './components/doctor/Appointments';
 import Availability from './components/doctor/Availability';
 import Credentials from './components/doctor/Credentials';
 import VideoCallPage from './pages/VideoCallPage';
@@ -48,7 +48,7 @@ function App() {
             }
           >
             <Route index element={<Overview />} />
-            <Route path="history" element={<History />} />
+            <Route path="appointments" element={<Appointments />} />
             <Route path="availability" element={<Availability />} />
             <Route path="credentials" element={<Credentials />} />
           </Route>
