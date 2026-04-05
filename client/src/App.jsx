@@ -2,6 +2,7 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
+import SymptomChecker from './components/SymptomChecker'
 import './App.css'
 
 function App() {
@@ -16,11 +17,14 @@ function App() {
           <img src={viteLogo} className="vite" alt="Vite logo" />
         </div>
         <div>
-          <h1>Get started</h1>
+          <h1>Healthcare AI</h1>
           <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+            Your AI-powered medical assistant. Describe your symptoms below.
           </p>
         </div>
+        
+        <SymptomChecker />
+
         <button
           className="counter"
           onClick={() => setCount((count) => count + 1)}
