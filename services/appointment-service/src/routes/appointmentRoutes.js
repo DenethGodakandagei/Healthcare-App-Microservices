@@ -9,7 +9,8 @@ import {
   getSessions,
   getSessionById,
   updateSession,
-  deleteSession
+  deleteSession,
+  updateAppointmentPayment
 } from '../controllers/appointmentController.js';
 
 const router = express.Router();
@@ -39,5 +40,8 @@ router.route('/:id')
 
 router.route('/:id/status')
   .put(updateAppointmentStatus);
+
+router.route('/:id/payment')
+  .put(updateAppointmentPayment);
 
 export default router;

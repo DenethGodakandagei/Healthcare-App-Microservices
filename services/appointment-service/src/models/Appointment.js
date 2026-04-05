@@ -67,6 +67,14 @@ const appointmentSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'approved', 'declined'],
     default: 'approved' // Set to approved by default as per user request
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed', 'refunded'],
+    default: 'pending'
+  },
+  paymentId: {
+    type: String
   }
 }, { timestamps: true });
 

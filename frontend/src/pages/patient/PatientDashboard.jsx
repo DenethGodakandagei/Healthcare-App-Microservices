@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, telemedicineAPI } from '../../services/api';
+import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, telemedicineAPI, paymentAPI } from '../../services/api';
 import doc1 from '../../assets/doc1.png';
 import doc2 from '../../assets/doc2.png';
 import doc3 from '../../assets/doc3.png';
 import doc4 from '../../assets/doc4.png';
 import AppointmentBookingWizard from '../../components/AppointmentBookingWizard';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
+import PaymentCheckout from '../../components/PaymentCheckout';
 
 const doctorImages = [doc1, doc2, doc3, doc4];
 
@@ -41,6 +42,7 @@ const icons = {
   check: <><polyline points="20 6 9 17 4 12" /></>,
   edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></>,
   chevronRight: <><polyline points="9 18 15 12 9 6" /></>,
+  creditCard: <><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></>,
 };
 
 const StatCard = ({ label, value, sub, icon }) => (
@@ -98,7 +100,12 @@ const AppointmentCard = ({ apt, doctors, onCancel, onEdit }) => {
         )}
         {apt.reasonForVisit || ''}
       </div>
-      <div className="shrink-0">
+      <div className="shrink-0 flex items-center gap-2">
+        {apt.paymentStatus === 'paid' ? (
+          <span className="inline-flex px-2 py-0.5 text-[9px] font-black uppercase bg-green-50 text-green-600 border border-green-100 rounded">Paid</span>
+        ) : (
+          <span className="inline-flex px-2 py-0.5 text-[9px] font-black uppercase bg-amber-50 text-amber-600 border border-amber-100 rounded">Unpaid</span>
+        )}
         <span className={`inline-flex px-2 py-0.5 text-xs font-medium border rounded ${statusConfig[status]}`}>{status}</span>
       </div>
       <div className="flex gap-2 shrink-0 ml-4">
@@ -131,14 +138,16 @@ const PatientDashboard = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [editAppointment, setEditAppointment] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [payments, setPayments] = useState([]);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [aptsRes, profileRes, doctorsRes] = await Promise.allSettled([
+        const [aptsRes, profileRes, doctorsRes, paymentsRes] = await Promise.allSettled([
           patientAPI.getAppointments(),
           patientAPI.getProfile(),
           doctorAPI.getAll(),
+          paymentAPI.getPatientPayments(),
         ]);
 
         // Get patient's appointments
@@ -158,12 +167,17 @@ const PatientDashboard = () => {
         // Load doctors (filter out incomplete or obvious mock accounts)
         if (doctorsRes.status === 'fulfilled') {
           const doctorsResponse = doctorsRes.value?.data;
-          const doctorsList = (doctorsResponse?.data || doctorsResponse || []).filter(d => 
-             d.firstName && d.lastName && 
-             !d.firstName.toLowerCase().includes('mock') && 
-             !d.firstName.toLowerCase().includes('test')
+          const doctorsList = (doctorsResponse?.data || doctorsResponse || []).filter(d =>
+            d.firstName && d.lastName &&
+            !d.firstName.toLowerCase().includes('mock') &&
+            !d.firstName.toLowerCase().includes('test')
           );
           setDoctors(doctorsList);
+        }
+
+        // Load payments
+        if (paymentsRes.status === 'fulfilled') {
+          setPayments(paymentsRes.value?.data?.data || []);
         }
 
         setAppointments(patientAppointments);
@@ -219,6 +233,7 @@ const PatientDashboard = () => {
     { id: 'overview', label: 'Overview', icon: 'home' },
     { id: 'appointments', label: 'Appointments', icon: 'calendar' },
     { id: 'telemedicine', label: 'Telemedicine', icon: 'video' },
+    { id: 'payments', label: 'Payments', icon: 'creditCard' },
     { id: 'profile', label: 'My Profile', icon: 'user' },
   ];
 
@@ -400,6 +415,66 @@ const PatientDashboard = () => {
                 <TelemedicineTab user={user} doctors={doctors} appointments={appointments} setAppointments={setAppointments} navigate={navigate} onEdit={handleEdit} />
               )}
 
+              {/* ---- PAYMENTS ---- */}
+              {activeTab === 'payments' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-gray-900 text-xl font-bold">Payment History</h2>
+                    <p className="text-gray-500 text-sm mt-0.5">Manage your consultation fees and receipts</p>
+                  </div>
+
+                  {payments.length === 0 ? (
+                    <div className="bg-white border border-gray-200 rounded-[2rem] p-12 text-center">
+                      <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-300">
+                        <Icon path={icons.creditCard} size={28} />
+                      </div>
+                      <p className="text-gray-600 font-bold">No payments found</p>
+                      <p className="text-gray-400 text-sm mt-1">Your transaction history will appear here once you book paid consultations.</p>
+                    </div>
+                  ) : (
+                    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50 border-b border-gray-100">
+                            <th className="px-6 py-4 text-[10px] font-black underline uppercase tracking-widest text-gray-400">Date</th>
+                            <th className="px-6 py-4 text-[10px] font-black underline uppercase tracking-widest text-gray-400">Appointment ID</th>
+                            <th className="px-6 py-4 text-[10px] font-black underline uppercase tracking-widest text-gray-400">Amount</th>
+                            <th className="px-6 py-4 text-[10px] font-black underline uppercase tracking-widest text-gray-400">Status</th>
+                            <th className="px-6 py-4 text-[10px] font-black underline uppercase tracking-widest text-gray-400">Method</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {payments.map((p) => (
+                            <tr key={p._id} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                                {new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-900 font-bold uppercase tracking-tight">
+                                {p.appointmentId ? `#${p.appointmentId.slice(-6)}` : '—'}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-900 font-black">
+                                LKR {p.amount.toLocaleString()}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${p.status === 'completed' ? 'bg-green-50 text-green-600 border-green-100' :
+                                  p.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                    'bg-red-50 text-red-600 border-red-100'
+                                  }`}>
+                                  {p.status}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-500 font-medium capitalize">
+                                {p.paymentMethod || 'Stripe'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* ---- PROFILE ---- */}
               {activeTab === 'profile' && (
                 <div className="max-w-lg space-y-5">
@@ -515,8 +590,6 @@ const PatientDashboard = () => {
   );
 };
 
-export default PatientDashboard;
-
 /* ─── Telemedicine Tab ────────────────────────────────────────── */
 const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigate, onEdit }) => {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -527,7 +600,9 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
   const [booking, setBooking] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [step, setStep] = useState('overview'); // 'overview' | 'specialties' | 'doctors' | 'sessions' | 'confirm'
+  const [step, setStep] = useState('overview'); // 'overview' | 'specialties' | 'doctors' | 'sessions' | 'confirm' | 'payment'
+  const [pendingAppointment, setPendingAppointment] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
 
   // Form fields
   const [patientName, setPatientName] = useState('');
@@ -539,7 +614,7 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
   const specialties = [...new Set(doctors.map(d => d.specialty).filter(Boolean))].sort();
 
   // Doctors filtered by selected specialty
-  const filteredDoctors = selectedSpecialty 
+  const filteredDoctors = selectedSpecialty
     ? doctors.filter(d => d.specialty === selectedSpecialty)
     : [];
 
@@ -578,23 +653,19 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
       setError('Please fill in all required fields.');
       return;
     }
-    setBooking(true);
-    setError('');
-    try {
-      const res = await appointmentAPI.book({
-        sessionId: selectedSession._id,
-        patientName,
-        patientNIC,
-        patientPhone,
-        reasonForVisit: reason,
-        appointmentType: 'online',
-      });
-      setAppointments(prev => [...prev, res.data?.data]);
-      setBookingSuccess(true);
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Booking failed. Please try again.');
-    }
-    setBooking(false);
+    
+    // We only book after payment succeeds
+    setPendingAppointment({
+      _id: "PENDING",
+      appointmentNumber: "TBD",
+      sessionId: selectedSession._id,
+      patientName,
+      patientNIC,
+      patientPhone,
+      reasonForVisit: reason,
+      appointmentType: 'online'
+    });
+    setStep('payment');
   };
 
   const handleJoinCall = (apt) => {
@@ -623,6 +694,8 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
     setReason('');
     setError('');
     setBookingSuccess(false);
+    setPendingAppointment(null);
+    setShowPayment(false);
   };
 
   const goBack = () => {
@@ -655,105 +728,105 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
       {/* Step 0: Overview & Book Button */}
       {step === 'overview' && (
         <div className="space-y-6">
-           <div className="bg-white border-2 border-dashed border-gray-100 rounded-[2rem] p-12 text-center flex flex-col items-center justify-center">
-              <div className="w-20 h-20 bg-sky-50 rounded-3xl flex items-center justify-center text-sky-500 mb-6 group hover:scale-105 transition-transform duration-500">
-                <Icon path={icons.video} size={36} />
+          <div className="bg-white border-2 border-dashed border-gray-100 rounded-[2rem] p-12 text-center flex flex-col items-center justify-center">
+            <div className="w-20 h-20 bg-sky-50 rounded-3xl flex items-center justify-center text-sky-500 mb-6 group hover:scale-105 transition-transform duration-500">
+              <Icon path={icons.video} size={36} />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Virtual Consultation</h3>
+            <p className="text-gray-500 max-w-sm mx-auto mb-8 text-sm leading-relaxed font-medium">
+              Connect with our certified medical professionals from the comfort of your home.
+            </p>
+            <button
+              onClick={() => setStep('specialties')}
+              className="h-14 px-8 bg-[#2299C9] text-white rounded-2xl font-bold hover:bg-[#1C82AB] active:scale-[0.98] transition-all flex items-center gap-3 shadow-xl shadow-sky-500/20"
+            >
+              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                <Icon path={icons.plus} size={18} />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Virtual Consultation</h3>
-              <p className="text-gray-500 max-w-sm mx-auto mb-8 text-sm leading-relaxed font-medium">
-                Connect with our certified medical professionals from the comfort of your home.
-              </p>
-              <button 
-                onClick={() => setStep('specialties')}
-                className="h-14 px-8 bg-[#2299C9] text-white rounded-2xl font-bold hover:bg-[#1C82AB] active:scale-[0.98] transition-all flex items-center gap-3 shadow-xl shadow-sky-500/20"
-              >
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Icon path={icons.plus} size={18} />
-                </div>
-                Book New Consultation
-              </button>
-           </div>
+              Book New Consultation
+            </button>
+          </div>
 
-           {onlineAppointments.length > 0 && (
-             <div className="space-y-4">
-                <h3 className="text-gray-900 font-bold text-lg px-2">Active Online Appointments</h3>
-                <div className="grid gap-3">
-                  {onlineAppointments.map(apt => {
-                    const date = new Date(apt.date || apt.createdAt);
-                    const doctorId = apt.doctorId || apt.sessionId?.doctorId;
-                    const doctor = doctors.find(d => d.userId === doctorId || String(d._id) === String(doctorId));
-                    const doctorName = doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : 'Doctor';
-                    return (
-                      <div key={apt._id} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg hover:shadow-gray-100/50 transition-all group overflow-hidden relative">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-sky-50/50 rounded-bl-[4rem] -mr-8 -mt-8 transition-transform group-hover:scale-125 duration-700" />
-                        
-                        <div className="flex items-center justify-between relative z-10">
-                          <div className="flex items-center gap-5">
-                            <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-sm ring-1 ring-gray-100">
-                              <img src={getDoctorImage(doctorId || '')} alt={doctorName} className="w-full h-full object-cover" />
-                            </div>
-                            <div>
-                               <p className="text-gray-900 text-base font-bold">{doctorName}</p>
-                               <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-[#0EA5E9] text-[10px] font-black uppercase tracking-wider bg-sky-50 px-2 py-0.5 rounded-md">
-                                    {doctor?.specialty || 'General Specialist'}
-                                  </span>
-                                  <span className="text-gray-400 text-xs text-medium">
-                                     {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                     {apt.startTime && ` at ${apt.startTime}`}
-                                  </span>
-                               </div>
-                               {apt.notes && (
-                                  <div className="mt-2.5 p-2 bg-sky-50/40 border border-sky-300/20 rounded-xl flex items-center gap-2 relative overflow-hidden group/note">
-                                     <div className="w-1 absolute left-0 top-0 bottom-0 bg-[#2299C9]" />
-                                     <div className="text-[#0EA5E9] shrink-0"><Icon path={icons.bell} size={12} /></div>
-                                     <p className="text-[10px] font-medium text-[#2299C9] leading-tight flex-1">
-                                        <span className="font-black uppercase text-[8px] tracking-[0.1em] opacity-60 block mb-0.5">Doctor's Update:</span>
-                                        {apt.notes}
-                                     </p>
-                                  </div>
-                               )}
-                            </div>
+          {onlineAppointments.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-gray-900 font-bold text-lg px-2">Active Online Appointments</h3>
+              <div className="grid gap-3">
+                {onlineAppointments.map(apt => {
+                  const date = new Date(apt.date || apt.createdAt);
+                  const doctorId = apt.doctorId || apt.sessionId?.doctorId;
+                  const doctor = doctors.find(d => d.userId === doctorId || String(d._id) === String(doctorId));
+                  const doctorName = doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : 'Doctor';
+                  return (
+                    <div key={apt._id} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg hover:shadow-gray-100/50 transition-all group overflow-hidden relative">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-sky-50/50 rounded-bl-[4rem] -mr-8 -mt-8 transition-transform group-hover:scale-125 duration-700" />
+
+                      <div className="flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-5">
+                          <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-sm ring-1 ring-gray-100">
+                            <img src={getDoctorImage(doctorId || '')} alt={doctorName} className="w-full h-full object-cover" />
                           </div>
-
-                          <div className="flex items-center gap-3 relative z-10 shrink-0">
-                             {apt.status !== 'cancelled' ? (
-                               <div className="flex items-center gap-2">
-                                  <button 
-                                    onClick={() => handleJoinCall(apt)}
-                                    className="h-10 px-5 bg-[#2299C9] text-white rounded-xl font-bold text-sm hover:bg-[#1C82AB] transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20"
-                                  >
-                                    <Icon path={icons.video} size={16} />
-                                    JOIN CALL
-                                  </button>
-                                 <button 
-                                   onClick={() => onEdit(apt)}
-                                   className="w-10 h-10 border border-gray-100 bg-gray-50 text-gray-400 rounded-xl flex items-center justify-center hover:bg-gray-100 hover:text-[#0EA5E9] transition-all"
-                                   title="Edit Details"
-                                 >
-                                    <Icon path={icons.edit} size={15} />
-                                 </button>
-                                 <button 
-                                   onClick={() => handleCancelRequest(apt._id)}
-                                   className="w-10 h-10 border border-red-500/10 bg-red-50 text-red-400 rounded-xl flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition-all"
-                                   title="Cancel Consultation"
-                                 >
-                                    <Icon path={icons.x} size={16} />
-                                 </button>
-                               </div>
-                             ) : (
-                               <span className="text-xs px-3 py-1 bg-red-50 text-red-600 border border-red-100 rounded-full font-bold uppercase tracking-wider">
-                                 Cancelled
-                               </span>
-                             )}
+                          <div>
+                            <p className="text-gray-900 text-base font-bold">{doctorName}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[#0EA5E9] text-[10px] font-black uppercase tracking-wider bg-sky-50 px-2 py-0.5 rounded-md">
+                                {doctor?.specialty || 'General Specialist'}
+                              </span>
+                              <span className="text-gray-400 text-xs text-medium">
+                                {isNaN(date) ? 'TBD' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                {apt.startTime && ` at ${apt.startTime}`}
+                              </span>
+                            </div>
+                            {apt.notes && (
+                              <div className="mt-2.5 p-2 bg-sky-50/40 border border-sky-300/20 rounded-xl flex items-center gap-2 relative overflow-hidden group/note">
+                                <div className="w-1 absolute left-0 top-0 bottom-0 bg-[#2299C9]" />
+                                <div className="text-[#0EA5E9] shrink-0"><Icon path={icons.bell} size={12} /></div>
+                                <p className="text-[10px] font-medium text-[#2299C9] leading-tight flex-1">
+                                  <span className="font-black uppercase text-[8px] tracking-[0.1em] opacity-60 block mb-0.5">Doctor's Update:</span>
+                                  {apt.notes}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
+
+                        <div className="flex items-center gap-3 relative z-10 shrink-0">
+                          {apt.status !== 'cancelled' ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleJoinCall(apt)}
+                                className="h-10 px-5 bg-[#2299C9] text-white rounded-xl font-bold text-sm hover:bg-[#1C82AB] transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20"
+                              >
+                                <Icon path={icons.video} size={16} />
+                                JOIN CALL
+                              </button>
+                              <button
+                                onClick={() => onEdit(apt)}
+                                className="w-10 h-10 border border-gray-100 bg-gray-50 text-gray-400 rounded-xl flex items-center justify-center hover:bg-gray-100 hover:text-[#0EA5E9] transition-all"
+                                title="Edit Details"
+                              >
+                                <Icon path={icons.edit} size={15} />
+                              </button>
+                              <button
+                                onClick={() => handleCancelRequest(apt._id)}
+                                className="w-10 h-10 border border-red-500/10 bg-red-50 text-red-400 rounded-xl flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition-all"
+                                title="Cancel Consultation"
+                              >
+                                <Icon path={icons.x} size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs px-3 py-1 bg-red-50 text-red-600 border border-red-100 rounded-full font-bold uppercase tracking-wider">
+                              Cancelled
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-             </div>
-           )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -766,7 +839,7 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
           </div>
           {specialties.length === 0 ? (
             <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center text-gray-400 text-sm">
-                No specialties available right now.
+              No specialties available right now.
             </div>
           ) : (
             <div className="flex flex-wrap gap-3">
@@ -799,63 +872,63 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredDoctors.map(doc => {
-                const availDays = (doc.availability || []).map(a => a.day?.slice(0, 3)).join(', ') || 'Not set';
-                return (
-                  <button
-                    key={doc._id}
-                    onClick={() => handleSelectDoctor(doc)}
-                    className="text-left bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#0EA5E9] hover:shadow-lg hover:shadow-sky-50 transition-all group"
-                  >
-                    {/* Doctor Image + Badge */}
-                    <div className="relative">
-                      <div className="w-full h-36 bg-gradient-to-br from-slate-50 to-gray-100 overflow-hidden">
-                        <img
-                          src={getDoctorImage(doc._id)}
-                          alt={`Dr. ${doc.firstName} ${doc.lastName}`}
-                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
-                        />
+              const availDays = (doc.availability || []).map(a => a.day?.slice(0, 3)).join(', ') || 'Not set';
+              return (
+                <button
+                  key={doc._id}
+                  onClick={() => handleSelectDoctor(doc)}
+                  className="text-left bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#0EA5E9] hover:shadow-lg hover:shadow-sky-50 transition-all group"
+                >
+                  {/* Doctor Image + Badge */}
+                  <div className="relative">
+                    <div className="w-full h-36 bg-gradient-to-br from-slate-50 to-gray-100 overflow-hidden">
+                      <img
+                        src={getDoctorImage(doc._id)}
+                        alt={`Dr. ${doc.firstName} ${doc.lastName}`}
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                    {/* Online badge */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full border border-green-100">
+                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Online</span>
+                    </div>
+                    {/* Fee badge */}
+                    <div className="absolute top-3 right-3 px-2.5 py-1 bg-gray-900/80 backdrop-blur-sm rounded-full">
+                      <span className="text-[11px] font-bold text-white">${doc.consultationFee || '—'}</span>
+                    </div>
+                  </div>
+
+                  {/* Doctor Info */}
+                  <div className="p-4">
+                    <h4 className="text-gray-900 font-bold text-sm truncate">Dr. {doc.firstName} {doc.lastName}</h4>
+                    <p className="text-[#0EA5E9] text-xs font-semibold uppercase tracking-wider mt-0.5">{doc.specialty}</p>
+
+                    {/* Stats row */}
+                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-gray-400"><Icon path={icons.activity} size={12} /></div>
+                        <span className="text-[11px] font-bold text-gray-600">{doc.experienceYears || 0}+ yrs</span>
                       </div>
-                      {/* Online badge */}
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full border border-green-100">
-                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Online</span>
-                      </div>
-                      {/* Fee badge */}
-                      <div className="absolute top-3 right-3 px-2.5 py-1 bg-gray-900/80 backdrop-blur-sm rounded-full">
-                        <span className="text-[11px] font-bold text-white">${doc.consultationFee || '—'}</span>
+                      <div className="w-px h-3 bg-gray-200" />
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-gray-400"><Icon path={icons.clock} size={12} /></div>
+                        <span className="text-[11px] font-medium text-gray-500 truncate">{availDays}</span>
                       </div>
                     </div>
 
-                    {/* Doctor Info */}
-                    <div className="p-4">
-                      <h4 className="text-gray-900 font-bold text-sm truncate">Dr. {doc.firstName} {doc.lastName}</h4>
-                      <p className="text-[#0EA5E9] text-xs font-semibold uppercase tracking-wider mt-0.5">{doc.specialty}</p>
-
-                      {/* Stats row */}
-                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
-                        <div className="flex items-center gap-1.5">
-                          <div className="text-gray-400"><Icon path={icons.activity} size={12} /></div>
-                          <span className="text-[11px] font-bold text-gray-600">{doc.experienceYears || 0}+ yrs</span>
-                        </div>
-                        <div className="w-px h-3 bg-gray-200" />
-                        <div className="flex items-center gap-1.5">
-                          <div className="text-gray-400"><Icon path={icons.clock} size={12} /></div>
-                          <span className="text-[11px] font-medium text-gray-500 truncate">{availDays}</span>
-                        </div>
-                      </div>
-
-                      {/* CTA */}
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-[11px] text-gray-400 font-medium">View available slots</span>
-                        <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 group-hover:bg-[#0EA5E9] group-hover:text-white transition-all">
-                          <Icon path={icons.chevronRight} size={14} />
-                        </div>
+                    {/* CTA */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-[11px] text-gray-400 font-medium">View available slots</span>
+                      <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 group-hover:bg-[#0EA5E9] group-hover:text-white transition-all">
+                        <Icon path={icons.chevronRight} size={14} />
                       </div>
                     </div>
-                  </button>
-                );
-              })}
-            </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -978,16 +1051,55 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
               Change Doctor
             </button>
             <button onClick={handleBook} disabled={booking}
-              className="flex-1 h-12 bg-[#2299C9] text-white rounded-xl text-sm font-bold hover:bg-[#1C82AB] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20">
-              {booking ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Icon path={icons.video} size={16} />}
-              {booking ? 'SECURING SLOT...' : 'Request Consultation'}
+              className="flex-1 h-12 bg-[#2299C9] text-white rounded-xl text-sm font-black hover:bg-[#1C82AB] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 duration-200">
+              {booking ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (
+                <div className="flex items-center gap-2">
+                  <Icon path={icons.creditCard} size={16} />
+                  <span>Pay & Confirm Appointment</span>
+                  <span className="px-1.5 py-0.5 bg-white/20 rounded text-[10px]">LKR {selectedDoctor?.consultationFee || 2500}</span>
+                </div>
+              )}
             </button>
           </div>
         </div>
       )}
 
+      {/* Step 4: Payment */}
+      {step === 'payment' && pendingAppointment && (
+        <PaymentCheckout
+          appointment={pendingAppointment}
+          doctor={selectedDoctor}
+          onShowSuccess={async (orderId) => {
+            try {
+              // 1. Create the appointment NOW since payment succeeded
+              const bookRes = await appointmentAPI.book({
+                ...pendingAppointment,
+                paymentStatus: 'paid'
+              });
+              const bookedApt = bookRes.data?.data;
+              
+              // 2. Link the payment to the real appointment ID
+              await paymentAPI.confirm({
+                paymentId: orderId,
+                status: 'completed',
+                appointmentId: bookedApt._id
+              });
+
+              setAppointments(prev => [...prev, bookedApt]);
+              setBookingSuccess(true);
+              setStep('success'); // advance the UI cleanly
+            } catch (err) {
+              console.error("Booking failed after payment:", err);
+              setError("Payment was successful but system sync failed. Please contact support.");
+              setStep('confirm');
+            }
+          }}
+          onCancel={() => setStep('confirm')}
+        />
+      )}
+
       {/* Success */}
-      {bookingSuccess && (
+      {step === 'success' && bookingSuccess && (
         <div className="bg-white border border-green-200 rounded-2xl p-8 text-center">
           <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Icon path={icons.check} size={28} className="text-green-600" />
@@ -1002,3 +1114,5 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
     </div>
   );
 };
+
+export default PatientDashboard;
