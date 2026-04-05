@@ -1,18 +1,27 @@
 import React, { useMemo } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useLocation } from 'react-router-dom';
 import AppointmentCard from './AppointmentCard';
 
 const Appointments = () => {
   const { appointments } = useOutletContext();
+  const location = useLocation();
+
+  // Determine if we should only show online or physical based on path
+  const onlyType = location.pathname.includes('physical') ? 'physical' : 'online';
 
   const groups = useMemo(() => {
     const list = appointments || [];
+    const filtered = list.filter(a => {
+      if (onlyType === 'online') return a.appointmentType === 'online';
+      return a.appointmentType !== 'online';
+    });
+
     return {
-      pending: list.filter(a => a.status === 'pending'),
-      active: list.filter(a => a.status === 'confirmed' || a.status === 'scheduled'),
-      all: list
+      pending: filtered.filter(a => a.status === 'pending'),
+      active: filtered.filter(a => a.status === 'confirmed' || a.status === 'scheduled'),
+      all: filtered
     };
-  }, [appointments]);
+  }, [appointments, onlyType]);
 
   if (!appointments || appointments.length === 0) {
     return (
@@ -30,26 +39,32 @@ const Appointments = () => {
 
       {/* Summary Bar */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#2299C9] p-5 rounded-2xl text-white shadow-lg shadow-sky-500/10 flex items-center justify-between">
-          <span className="text-[10px] font-black uppercase tracking-widest opacity-80">Pending Waitlist</span>
+        <div className={(onlyType === 'online' ? "bg-[#2299C9] text-white" : "bg-emerald-600 text-white") + " p-5 rounded-2xl shadow-lg flex items-center justify-between"}>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-80">{onlyType === 'online' ? 'Online Appointments' : 'Physical Sessions'}</span>
+            <span className="text-[9px] font-bold opacity-60">Waitlist</span>
+          </div>
           <span className="text-2xl font-black">{groups.pending.length}</span>
         </div>
         <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <span className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Active Schedule</span>
-          <span className="text-[#0EA5E9] text-2xl font-black">{groups.active.length}</span>
+          <div className="flex flex-col">
+            <span className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Active Schedule</span>
+            <span className="text-gray-300 text-[9px] font-bold">Confirmed</span>
+          </div>
+          <span className={(onlyType === 'online' ? "text-[#0EA5E9]" : "text-emerald-500") + " text-2xl font-black"}>{groups.active.length}</span>
         </div>
         <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm flex items-center justify-between">
-          <span className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Total Patient Records</span>
+          <span className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Total Category Records</span>
           <span className="text-gray-900 text-2xl font-black">{groups.all.length}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-12">
         {/* Waiting List */}
         {groups.pending.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 px-1">
-              <span className="w-1.5 h-1.5 bg-[#0EA5E9] rounded-full animate-pulse" />
+              <span className={"w-1.5 h-1.5 rounded-full animate-pulse " + (onlyType === 'online' ? "bg-[#0EA5E9]" : "bg-emerald-500")} />
               <h3 className="text-gray-900 font-bold uppercase tracking-widest text-[10px]">Action Required</h3>
             </div>
             <div className="grid grid-cols-1 gap-3">
@@ -61,12 +76,16 @@ const Appointments = () => {
         {/* General Queue */}
         <div className="space-y-4">
           <div className="flex items-center gap-3 px-1">
-            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-            <h3 className="text-gray-900 font-bold uppercase tracking-widest text-[10px]">Registry History</h3>
+            <span className={"w-1.5 h-1.5 rounded-full " + (onlyType === 'online' ? "bg-[#0EA5E9]" : "bg-emerald-500")} />
+            <h3 className="text-gray-900 font-bold uppercase tracking-widest text-[10px]">Active Registry</h3>
           </div>
-          <div className="grid grid-cols-1 gap-3">
-            {groups.all.filter(a => a.status !== 'pending').map(apt => <AppointmentCard key={apt._id} apt={apt} />)}
-          </div>
+          {groups.all.filter(a => a.status !== 'pending').length === 0 ? (
+            <div className="p-8 border-2 border-dashed border-gray-100 rounded-2xl text-center text-gray-300 text-[10px] font-bold uppercase tracking-widest">No previous history in this category</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {groups.all.filter(a => a.status !== 'pending').map(apt => <AppointmentCard key={apt._id} apt={apt} />)}
+            </div>
+          )}
         </div>
       </div>
     </div>
