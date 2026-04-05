@@ -15,8 +15,16 @@ spec:
       containers:
         - name: identity-service
           image: identity-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4004
+          env:
+            - name: PORT
+              value: "4004"
+            - name: MONGO_URI
+              value: "mongodb://mongodb:27017/identity_db"
+            - name: JWT_SECRET
+              value: "secret"
 ---
 apiVersion: v1
 kind: Service
