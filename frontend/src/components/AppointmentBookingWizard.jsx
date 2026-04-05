@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { doctorAPI, sessionAPI, appointmentAPI, patientAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import PaymentCheckout from './PaymentCheckout';
 
 const Icon = ({ path, size = 20 }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{path}</svg>
@@ -22,6 +23,7 @@ export default function AppointmentBookingWizard({ open, onClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [createdAppointment, setCreatedAppointment] = useState(null);
 
   const getDaysInMonth = useCallback((date) => {
     const year = date.getFullYear(), month = date.getMonth();
@@ -57,9 +59,9 @@ export default function AppointmentBookingWizard({ open, onClose }) {
     try {
       // Load doctors first (filter out mock/test data)
       const docsRes = await doctorAPI.getAll();
-      const docs = (docsRes.data?.data || []).filter(d => 
-        d.firstName && d.lastName && 
-        !d.firstName.toLowerCase().includes('mock') && 
+      const docs = (docsRes.data?.data || []).filter(d =>
+        d.firstName && d.lastName &&
+        !d.firstName.toLowerCase().includes('mock') &&
         !d.firstName.toLowerCase().includes('test')
       );
       setDoctors(docs);
@@ -146,23 +148,22 @@ export default function AppointmentBookingWizard({ open, onClose }) {
       return;
     }
     setSubmitting(true);
-    setError('');
-    try {
-      await appointmentAPI.book({
-        sessionId: selectedSession._id,
-        reasonForVisit: patient.reason || 'General Consultation',
-        patientName: patient.name,
-        patientNIC: patient.nic,
-        patientPhone: patient.phone,
-        appointmentType: selectedSession.sessionType === 'online' ? 'online' : 'physical',
-      });
-      onClose();
-      window.location.reload();
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Booking failed');
-    } finally {
-      setSubmitting(false);
-    }
+    
+    // We only book after payment succeeds
+    setCreatedAppointment({
+      _id: "PENDING",
+      appointmentNumber: "TBD",
+      sessionId: selectedSession._id,
+      reasonForVisit: patient.reason || 'General Consultation',
+      patientName: patient.name,
+      patientNIC: patient.nic,
+      patientPhone: patient.phone,
+      appointmentType: selectedSession.sessionType === 'online' ? 'online' : 'physical',
+      date: selectedDate,
+      startTime: selectedSession.startTime,
+    });
+    setStep(5);
+    setSubmitting(false);
   };
 
   if (!open) return null;
@@ -171,7 +172,9 @@ export default function AppointmentBookingWizard({ open, onClose }) {
     1: selectedSpecialty && filteredDoctors.length > 0,
     2: selectedDoctor,
     3: selectedSession,
-    4: selectedSession && patient.name && patient.nic && patient.phone
+    4: selectedSession && patient.name && patient.nic && patient.phone,
+    5: true,
+    6: true
   };
 
   const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -184,16 +187,16 @@ export default function AppointmentBookingWizard({ open, onClose }) {
           <div className="flex-1 text-center">
             <h2 className="text-lg font-semibold text-gray-900">Book Appointment</h2>
             <div className="flex items-center justify-center gap-1.5 mt-2">
-              {[1, 2, 3, 4].map(s => (
+              {[1, 2, 3, 4, 5].map(s => (
                 <div key={s} className="flex items-center">
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium ${step >= s ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'}`}>{s}</div>
-                  {s < 4 && <div className={`w-4 h-0.5 ${step > s ? 'bg-green-600' : 'bg-gray-100'}`} />}
+                  {s < 5 && <div className={`w-4 h-0.5 ${step > s ? 'bg-green-600' : 'bg-gray-100'}`} />}
                 </div>
               ))}
             </div>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors">
-            <Icon path={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} size={18} />
+            <Icon path={<><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>} size={18} />
           </button>
         </div>
 
@@ -206,7 +209,7 @@ export default function AppointmentBookingWizard({ open, onClose }) {
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-3">Select Medical Specialty</h3>
               {loading ? (
-                <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin"/></div>
+                <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" /></div>
               ) : specialties.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-gray-500 text-sm mb-2">No specialties available</p>
@@ -218,9 +221,8 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                     <button
                       key={spec}
                       onClick={() => { setSelectedSpecialty(spec); }}
-                      className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                        selectedSpecialty === spec ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${selectedSpecialty === spec ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       {spec}
                     </button>
@@ -238,7 +240,7 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                 <p className="text-xs text-gray-500">{selectedSpecialty}</p>
               </div>
               {loading ? (
-                <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin"/></div>
+                <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" /></div>
               ) : filteredDoctors.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500 text-sm mb-3">No doctors found</p>
@@ -250,13 +252,11 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                     <div
                       key={doc._id}
                       onClick={() => setSelectedDoctor(doc)}
-                      className={`p-3 rounded-lg border cursor-pointer flex items-center gap-3 transition-all ${
-                        selectedDoctor?._id === doc._id ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`p-3 rounded-lg border cursor-pointer flex items-center gap-3 transition-all ${selectedDoctor?._id === doc._id ? 'border-green-600 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                        selectedDoctor?._id === doc._id ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'
-                      }`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${selectedDoctor?._id === doc._id ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'
+                        }`}>
                         {doc.firstName[0]}{doc.lastName[0]}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -267,7 +267,7 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                       </div>
                       {selectedDoctor?._id === doc._id && (
                         <div className="w-5 h-5 rounded-full bg-green-600 flex items-center justify-center">
-                          <Icon path={<><polyline points="20 6 9 17 4 12"/></>} size={12} className="text-white" />
+                          <Icon path={<><polyline points="20 6 9 17 4 12" /></>} size={12} className="text-white" />
                         </div>
                       )}
                     </div>
@@ -286,10 +286,10 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                   <p className="text-xs text-gray-500">Dr. {selectedDoctor.firstName} {selectedDoctor.lastName}</p>
                   <div className="flex gap-1">
                     <button onClick={() => changeMonth(-1)} className="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
-                      <Icon path={<><polyline points="15 18 9 12 15 6"/></>} size={14} />
+                      <Icon path={<><polyline points="15 18 9 12 15 6" /></>} size={14} />
                     </button>
                     <button onClick={() => changeMonth(1)} className="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
-                      <Icon path={<><polyline points="9 18 15 12 9 6"/></>} size={14} />
+                      <Icon path={<><polyline points="9 18 15 12 9 6" /></>} size={14} />
                     </button>
                   </div>
                 </div>
@@ -297,7 +297,7 @@ export default function AppointmentBookingWizard({ open, onClose }) {
               </div>
 
               {loading ? (
-                <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin"/></div>
+                <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" /></div>
               ) : (
                 <>
                   <div className="border border-gray-200 rounded-xl p-3">
@@ -322,15 +322,14 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                               }
                             }}
                             disabled={isPast || !isAvailable}
-                            className={`aspect-square rounded-md flex flex-col items-center justify-center transition-all text-xs ${
-                              isSelected
-                                ? 'bg-gray-900 text-white font-semibold'
-                                : isPast
-                                  ? 'bg-purple-50 text-purple-400 cursor-not-allowed border border-purple-100'
-                                  : isAvailable
-                                    ? 'bg-white border border-green-500 text-gray-900 hover:bg-green-50 hover:border-green-600 font-medium shadow-sm'
-                                    : 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                            }`}
+                            className={`aspect-square rounded-md flex flex-col items-center justify-center transition-all text-xs ${isSelected
+                              ? 'bg-gray-900 text-white font-semibold'
+                              : isPast
+                                ? 'bg-purple-50 text-purple-400 cursor-not-allowed border border-purple-100'
+                                : isAvailable
+                                  ? 'bg-white border border-green-500 text-gray-900 hover:bg-green-50 hover:border-green-600 font-medium shadow-sm'
+                                  : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                              }`}
                           >
                             <span className="text-sm">{date.getDate()}</span>
                             {isAvailable && !isSelected && <div className="w-1 h-1 bg-green-600 rounded-full mt-0.5" />}
@@ -348,15 +347,14 @@ export default function AppointmentBookingWizard({ open, onClose }) {
                           <button
                             key={sess._id}
                             onClick={() => setSelectedSession(sess)}
-                            className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
-                              selectedSession?._id === sess._id
-                                ? 'border-green-600 bg-green-50'
-                                : 'border-gray-100 hover:border-gray-200 bg-white'
-                            }`}
+                            className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${selectedSession?._id === sess._id
+                              ? 'border-green-600 bg-green-50'
+                              : 'border-gray-100 hover:border-gray-200 bg-white'
+                              }`}
                           >
                             <div className="flex items-center gap-3">
                               <div className={`p-1.5 rounded-lg ${sess.sessionType === 'online' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600'}`}>
-                                <Icon path={sess.sessionType === 'online' ? <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></> : <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>} size={14} />
+                                <Icon path={sess.sessionType === 'online' ? <><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></> : <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>} size={14} />
                               </div>
                               <div className="text-left">
                                 <p className="text-sm font-bold text-gray-900">{sess.startTime} – {sess.endTime}</p>
@@ -434,14 +432,84 @@ export default function AppointmentBookingWizard({ open, onClose }) {
               </div>
             </div>
           )}
+
+          {/* Step 5: Payment */}
+          {step === 5 && createdAppointment && (
+            <div className="max-h-[70vh] overflow-y-auto">
+              <PaymentCheckout
+                appointment={createdAppointment}
+                doctor={selectedDoctor}
+                onShowSuccess={async (orderId) => {
+                  try {
+                    const res = await appointmentAPI.book({
+                      sessionId: selectedSession._id,
+                      reasonForVisit: patient.reason || 'General Consultation',
+                      patientName: patient.name,
+                      patientNIC: patient.nic,
+                      patientPhone: patient.phone,
+                      appointmentType: selectedSession.sessionType === 'online' ? 'online' : 'physical',
+                      paymentStatus: 'paid'
+                    });
+                    const booked = res.data?.data;
+                    await paymentAPI.confirm({
+                      paymentId: orderId,
+                      status: 'completed',
+                      appointmentId: booked._id
+                    });
+                    setCreatedAppointment(booked);
+                    setStep(6);
+                  } catch (err) {
+                    const msg = err?.response?.data?.message || err.message;
+                    setError('Booking sync failed: ' + msg);
+                    setStep(4);
+                  }
+                }}
+                onCancel={() => {
+                  setError('Payment was not completed. Please try again.');
+                  setStep(4);
+                }}
+              />
+            </div>
+          )}
+
+          {/* Step 6: Final Success */}
+          {step === 6 && createdAppointment && (
+            <div className="text-center py-10 space-y-6">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600">
+                <Icon path={<polyline points="20 6 9 17 4 12" />} size={40} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Appointment Booked!</h3>
+                <p className="text-gray-500 mt-2">Congratulations, your token has been generated.</p>
+              </div>
+              <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
+                <div className="flex justify-between items-center pb-4 border-b border-gray-200">
+                  <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Token Number</p>
+                  <p className="text-3xl font-black text-green-600">#{createdAppointment.tokenNumber}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-left">
+                  <div>
+                    <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Date</p>
+                    <p className="text-sm font-bold text-gray-900">{new Date(createdAppointment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Arrival</p>
+                    <p className="text-sm font-bold text-gray-900">{createdAppointment.startTime}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-100 flex gap-2.5">
-          {step > 1 ? (
+          {step > 1 && step < 5 ? (
             <button onClick={() => setStep(s => s - 1)} className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">Back</button>
+          ) : step === 6 ? (
+            <button onClick={() => { onClose(); window.location.reload(); }} className="flex-1 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium">Done</button>
           ) : (
-            <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">Cancel</button>
+            <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-50" disabled={step === 5}>Cancel</button>
           )}
           {step < 4 ? (
             <button
@@ -451,15 +519,20 @@ export default function AppointmentBookingWizard({ open, onClose }) {
             >
               Continue
             </button>
-          ) : (
+          ) : step === 4 ? (
             <button
               onClick={handleBook}
               disabled={submitting || !canProceed[4]}
-              className="flex-1 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5 bg-[#2299C9] text-white rounded-lg hover:bg-[#1C82AB] transition-colors text-sm font-black disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-sky-500/20 active:scale-[0.98] duration-200"
             >
-              {submitting ? 'Booking...' : 'Confirm Booking'}
+              {submitting ? 'Creating...' : (
+                <div className="flex items-center justify-center gap-2">
+                  <Icon path={<><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></>} size={14} />
+                  <span>Pay Now (LKR {selectedDoctor?.consultationFee || 2500})</span>
+                </div>
+              )}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

@@ -18,7 +18,7 @@ const generateAppointmentNumber = () => {
 // @access  Private (Doctor/Admin)
 export const createSession = async (req, res) => {
   try {
-    const rawDoctorId = req.headers['x-user-id']; 
+    const rawDoctorId = req.headers['x-user-id'];
     if (!rawDoctorId) return res.status(401).json({ success: false, message: 'Unauthorized, x-user-id missing' });
 
     const { date, startTime, endTime, maxAppointments, sessionType } = req.body;
@@ -110,7 +110,7 @@ export const bookAppointment = async (req, res) => {
     const patientId = req.headers['x-user-id'];
     if (!patientId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    const { sessionId, reasonForVisit, patientName, patientNIC, patientPhone, appointmentType } = req.body;
+    const { sessionId, reasonForVisit, patientName, patientNIC, patientPhone, appointmentType, paymentStatus, paymentId } = req.body;
 
     const session = await Session.findById(sessionId);
     if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
@@ -143,7 +143,9 @@ export const bookAppointment = async (req, res) => {
       patientName,
       patientNIC,
       patientPhone,
-      appointmentType: appointmentType || 'physical'
+      appointmentType: appointmentType || 'physical',
+      paymentStatus: paymentStatus || 'pending',
+      paymentId: paymentId || 'PENDING'
     });
 
     res.status(201).json({ success: true, data: appointment });
@@ -204,6 +206,25 @@ export const updateAppointmentStatus = async (req, res) => {
     if (notes) appointment.notes = notes;
     if (reasonForVisit !== undefined) appointment.reasonForVisit = reasonForVisit;
     if (req.body.onlineStatus) appointment.onlineStatus = req.body.onlineStatus;
+
+    await appointment.save();
+    res.status(200).json({ success: true, data: appointment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update appointment payment status
+export const updateAppointmentPayment = async (req, res) => {
+  try {
+    const { paymentStatus, paymentId } = req.body;
+    const appointmentId = req.params.id;
+
+    let appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
+
+    if (paymentStatus) appointment.paymentStatus = paymentStatus;
+    if (paymentId) appointment.paymentId = paymentId;
 
     await appointment.save();
     res.status(200).json({ success: true, data: appointment });

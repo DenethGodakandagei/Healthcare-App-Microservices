@@ -7,7 +7,7 @@ const Icon = ({ path, size = 20, className = "" }) => (
 );
 
 const icons = {
-  check: <polyline points="20 6 9 17 4 12"/>,
+  check: <polyline points="20 6 9 17 4 12" />,
 };
 
 const BookingSuccess = ({ appointment, doctor }) => {
@@ -21,9 +21,9 @@ const BookingSuccess = ({ appointment, doctor }) => {
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
-  const appointmentDate = new Date(appointment.date).toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    month: 'long', 
+  const appointmentDate = new Date(appointment.date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
     day: 'numeric',
     year: 'numeric'
   });
@@ -33,7 +33,7 @@ const BookingSuccess = ({ appointment, doctor }) => {
       <div className="w-24 h-24 bg-green-500 rounded-3xl flex items-center justify-center text-white mx-auto mb-8 shadow-lg shadow-green-200">
         <Icon path={icons.check} size={48} />
       </div>
-      
+
       <h2 className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">Booking Confirmed!</h2>
       <p className="text-lg text-gray-500 font-medium mb-12 leading-relaxed">
         Your appointment with <span className="text-gray-900 font-bold">Dr. {doctor.firstName} {doctor.lastName}</span> has been successfully scheduled.
@@ -51,7 +51,7 @@ const BookingSuccess = ({ appointment, doctor }) => {
             <span className="text-green-600 font-black text-3xl">#{appointment.tokenNumber}</span>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-10">
           <div className="space-y-1.5">
             <span className="text-gray-400 font-bold uppercase text-[10px] tracking-widest block">Consultation Date</span>

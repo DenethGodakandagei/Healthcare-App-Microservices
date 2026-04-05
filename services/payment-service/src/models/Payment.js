@@ -7,7 +7,7 @@ const paymentSchema = new mongoose.Schema({
   },
   appointmentId: {
     type: String,
-    required: true
+    required: false
   },
   amount: {
     type: Number,
