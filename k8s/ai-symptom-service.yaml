@@ -15,8 +15,16 @@ spec:
       containers:
         - name: ai-symptom-service
           image: ai-symptom-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4001
+          env:
+            - name: PORT
+              value: "4001"
+            - name: MONGO_URI
+              value: "mongodb://mongodb:27017/ai_symptom_db"
+            - name: JWT_SECRET
+              value: "secret"
 ---
 apiVersion: v1
 kind: Service
