@@ -21,6 +21,12 @@ export const patientAPI = {
   getProfile: () => API.get('/patients/profile'),
   updateProfile: (data) => API.put('/patients/profile', data),
   getAppointments: () => API.get('/appointments/patient'),
+  // Admin/Patient management endpoints
+  getAll: () => API.get('/patients'),
+  getById: (id) => API.get(`/patients/${id}`),
+  create: (data) => API.post('/patients', data),
+  update: (id, data) => API.put(`/patients/${id}`, data),
+  delete: (id) => API.delete(`/patients/${id}`),
 };
 
 // Doctor endpoints
@@ -30,6 +36,9 @@ export const doctorAPI = {
   getProfile: () => API.get('/doctors/profile'),
   createProfile: (data) => API.post('/doctors/profile', data),
   updateProfile: (data) => API.put('/doctors/profile', data),
+  create: (data) => API.post('/doctors', data),
+  update: (id, data) => API.put(`/doctors/${id}`, data),
+  delete: (id) => API.delete(`/doctors/${id}`),
   getAppointments: () => API.get('/appointments/doctor'),
 };
 
@@ -39,6 +48,7 @@ export const appointmentAPI = {
   getById: (id) => API.get(`/appointments/${id}`),
   book: (data) => API.post('/appointments', data),
   updateStatus: (id, data) => API.put(`/appointments/${id}/status`, data),
+  updatePayment: (id, data) => API.put(`/appointments/${id}/payment`, data),
   cancel: (id) => appointmentAPI.updateStatus(id, { status: 'cancelled' }),
 };
 

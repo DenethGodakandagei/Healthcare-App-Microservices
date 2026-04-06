@@ -68,7 +68,19 @@ const Navbar = () => {
     { name: 'Contact', path: '/#contact' },
   ];
 
-  const dashboardPath = user?.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard';
+  const getDashboardPath = () => {
+    switch (user?.role) {
+      case 'admin':
+        return '/admin/dashboard';
+      case 'doctor':
+        return '/doctor/dashboard';
+      case 'patient':
+        return '/patient/dashboard';
+      default:
+        return '/';
+    }
+  };
+  const dashboardPath = getDashboardPath();
   const isHeroMode = location.pathname === '/' && !isScrolled;
 
   return (

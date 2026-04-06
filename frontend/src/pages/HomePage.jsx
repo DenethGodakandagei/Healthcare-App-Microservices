@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { doctorAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import heroBg from '../assets/hero-bg.png';
 import revenueCycleImg from '../assets/revenue_cycle.png';
 import labResultsImg from '../assets/lab_results.png';
@@ -22,7 +23,8 @@ const icons = {
   shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></>,
   activity: <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></>,
   lightning: <><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></>,
-  play: <><polygon points="5 3 19 12 5 21 5 3" /></>
+  play: <><polygon points="5 3 19 12 5 21 5 3" /></>,
+  layout: <><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></>,
 };
 
 import doc1 from '../assets/doc1.png';
@@ -33,8 +35,23 @@ import doc4 from '../assets/doc4.png';
 const doctorImages = [doc1, doc2, doc3, doc4];
 
 const HomePage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [featuredDoctors, setFeaturedDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const getDashboardPath = () => {
+    switch (user?.role) {
+      case 'admin':
+        return '/admin/dashboard';
+      case 'doctor':
+        return '/doctor/dashboard';
+      case 'patient':
+        return '/patient/dashboard';
+      default:
+        return '/';
+    }
+  };
 
   const getDoctorImage = (id) => {
     if (!id) return doc1;
@@ -86,22 +103,36 @@ const HomePage = () => {
             </p>
 
             <div className="flex flex-wrap items-center gap-5 pt-4">
-              <Link
-                to="/register"
-                className="group flex items-center gap-3 px-8 py-5 bg-white text-gray-900 font-black rounded-full hover:bg-gray-100 transition-all shadow-2xl shadow-white/5 active:scale-95"
-              >
-                <div className="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center transition-transform group-hover:translate-x-1">
-                  <Icon path={<polyline points="9 18 15 12 9 6" />} size={14} />
-                </div>
-                Get started
-              </Link>
+              {user ? (
+                <Link
+                  to={getDashboardPath()}
+                  className="group flex items-center gap-3 px-8 py-5 bg-white/20 backdrop-blur-sm text-white font-bold rounded-full hover:bg-white/30 transition-all border border-white/20 shadow-lg active:scale-95"
+                >
+                  <div className="w-6 h-6 bg-white/30 rounded-full flex items-center justify-center">
+                    <Icon path={icons.layout} size={14} />
+                  </div>
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <Link
+                  to="/register"
+                  className="group flex items-center gap-3 px-8 py-5 bg-white text-gray-900 font-black rounded-full hover:bg-gray-100 transition-all shadow-2xl shadow-white/5 active:scale-95"
+                >
+                  <div className="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center transition-transform group-hover:translate-x-1">
+                    <Icon path={<polyline points="9 18 15 12 9 6" />} size={14} />
+                  </div>
+                  Get started
+                </Link>
+              )}
 
-              <button className="flex items-center gap-3 px-8 py-5 border border-white/30 text-white font-bold rounded-full hover:bg-white/10 transition-all backdrop-blur-sm group active:scale-95">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/40 transition-colors">
-                  <Icon path={icons.lightning} size={12} className="fill-white" />
-                </div>
-                Request a demo
-              </button>
+              {!user && (
+                <button className="flex items-center gap-3 px-8 py-5 border border-white/30 text-white font-bold rounded-full hover:bg-white/10 transition-all backdrop-blur-sm group active:scale-95">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/40 transition-colors">
+                    <Icon path={icons.lightning} size={12} className="fill-white" />
+                  </div>
+                  Request a demo
+                </button>
+              )}
             </div>
           </div>
         </div>
