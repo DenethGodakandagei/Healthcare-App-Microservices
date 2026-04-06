@@ -4,7 +4,10 @@ import {
   getAllDoctors,
   getDoctorById,
   getDoctorProfile,
-  updateDoctorProfile
+  updateDoctorProfile,
+  updateDoctor,
+  deleteDoctor,
+  createDoctor
 } from '../controllers/doctorController.js';
 
 const router = express.Router();
@@ -15,9 +18,12 @@ router.route('/profile')
   .put(updateDoctorProfile);
 
 router.route('/')
-  .get(getAllDoctors);
+  .get(getAllDoctors)
+  .post(createDoctor); // Admin create
 
 router.route('/:id')
-  .get(getDoctorById);
+  .get(getDoctorById)
+  .put(updateDoctor)
+  .delete(deleteDoctor);
 
 export default router;
