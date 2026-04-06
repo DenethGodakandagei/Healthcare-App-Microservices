@@ -69,26 +69,10 @@ export const telemedicineAPI = {
   sendMessage: (sessionId, data) => API.post(`/telemedicine/${sessionId}/chat`, data),
   getMessages: (sessionId) => API.get(`/telemedicine/${sessionId}/chat`),
 };
-
 // Notifications
 export const notificationAPI = {
-  getNotifications: (receiverId) => API.get(`/notifications/${receiverId}`),
-  send: (data) => API.post('/notifications/send', data),
+  getNotifications: (userId) => API.get(`/notifications/${userId}`),
 };
 
-export const chatAPI = {
-  accessChat: (userId) => API.post('/chat', { userId }),
-  fetchChats: () => API.get('/chat'),
-  getChatById: (chatId) => API.get(`/chat/${chatId}`),
-  createGroup: (data) => API.post('/chat/group', data),
-  renameGroup: (data) => API.put('/chat/rename', data),
-  addToGroup: (data) => API.put('/chat/groupadd', data),
-  removeFromGroup: (data) => API.put('/chat/groupremove', data),
-};
-
-export const messageAPI = {
-  getMessages: (chatId) => API.get(`/message/${chatId}`),
-  sendMessage: (data) => API.post('/message', data),
-};
 
 export default API;

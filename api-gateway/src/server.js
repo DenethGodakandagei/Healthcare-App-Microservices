@@ -56,25 +56,6 @@ app.use('/api/doctors', createProxyMiddleware({
   changeOrigin: true
 }));
 
-app.use('/api/notifications', createProxyMiddleware({
-  target: (process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:4005') + '/api/notifications',
-  changeOrigin: true
-}));
-
-// FIXED: Chat routes - strip /api/chat → /chat
-app.use('/api/chat', createProxyMiddleware({
-  target: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:4005',
-  changeOrigin: true,
-  pathRewrite: { '^/api/chat': '/chat' }
-}));
-
-// FIXED: Message routes - strip /api/message → /message
-app.use('/api/message', createProxyMiddleware({
-  target: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:4005',
-  changeOrigin: true,
-  pathRewrite: { '^/api/message': '/message' }
-}));
-
 app.use('/api/patients', createProxyMiddleware({
   target: (process.env.PATIENT_SERVICE_URL || 'http://localhost:4006') + '/api/patients',
   changeOrigin: true

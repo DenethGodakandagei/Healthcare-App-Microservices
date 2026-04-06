@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { doctorAPI, chatAPI } from '../services/api';
+import { doctorAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const Icon = ({ path, size = 20, className = "" }) => (
@@ -68,22 +68,6 @@ const DoctorsPage = () => {
     });
     setFilteredDoctors(filtered);
   }, [search, specialty, doctors]);
-
-  const handleChat = async (doctor) => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    try {
-      const res = await chatAPI.accessChat(doctor.userId || doctor._id);
-      const chat = res.data;
-      navigate(`/chat/${chat._id}`);
-    } catch (err) {
-      console.error("Failed to start chat:", err);
-      const errorMsg = err.response?.data?.message || err.message || "Unknown error";
-      alert("Unable to start chat: " + errorMsg);
-    }
-  };
 
   const specialties = ['All', ...new Set(doctors.map(d => d.specialty))];
 
@@ -168,15 +152,7 @@ const DoctorsPage = () => {
                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Fee</p>
                          <p className="text-lg font-extrabold text-gray-900">${doc.consultationFee}</p>
                       </div>
-                      <button
-                        onClick={() => handleChat(doc)}
-                        className="bg-gray-100 text-gray-900 rounded-2xl flex flex-col items-center justify-center p-4 hover:bg-gray-200 transition-all border border-gray-200"
-                      >
-                         <div className="flex items-center gap-2">
-                           <Icon path={icons.chat} size={14} />
-                           <p className="text-sm font-bold">Chat Now</p>
-                         </div>
-                      </button>
+                  
                       <Link
                         to={`/booking/${doc._id}`}
                         className="bg-gray-900 text-white rounded-2xl flex flex-col items-center justify-center p-4 hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"

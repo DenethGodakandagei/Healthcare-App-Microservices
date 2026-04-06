@@ -15,7 +15,6 @@ import Availability from './components/doctor/Availability';
 import Credentials from './components/doctor/Credentials';
 import Notifications from './components/doctor/Notifications';
 import VideoCallPage from './pages/VideoCallPage';
-import ChatPage from './pages/ChatPage';
 
 function App() {
   return (
@@ -29,16 +28,6 @@ function App() {
           <Route path="/confirm-booking/:doctorId/:sessionId" element={<ConfirmBookingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-
-          {/* Chat protected route */}
-          <Route
-            path="/chat/:chatId?"
-            element={
-              <ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>
-            }
-          />
 
           {/* Patient protected route */}
           <Route
