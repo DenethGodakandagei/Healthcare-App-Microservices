@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, telemedicineAPI, paymentAPI } from '../../services/api';
 import doc1 from '../../assets/doc1.png';
 import doc2 from '../../assets/doc2.png';
@@ -43,6 +43,7 @@ const icons = {
   edit: <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></>,
   chevronRight: <><polyline points="9 18 15 12 9 6" /></>,
   creditCard: <><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></>,
+  download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
 };
 
 const StatCard = ({ label, value, sub, icon }) => (
@@ -60,7 +61,7 @@ const StatCard = ({ label, value, sub, icon }) => (
 
 
 
-const AppointmentCard = ({ apt, doctors, onCancel, onEdit }) => {
+const AppointmentCard = ({ apt, doctors, onCancel, onEdit, onDownload }) => {
   const appointmentDate = new Date(apt.date || apt.sessionId?.date);
   const sessionStart = apt.sessionId?.startTime || apt.startTime;
   const sessionEnd = apt.sessionId?.endTime || apt.endTime;
@@ -102,7 +103,15 @@ const AppointmentCard = ({ apt, doctors, onCancel, onEdit }) => {
       </div>
       <div className="shrink-0 flex items-center gap-2">
         {apt.paymentStatus === 'paid' ? (
-          <span className="inline-flex px-2 py-0.5 text-[9px] font-black uppercase bg-green-50 text-green-600 border border-green-100 rounded">Paid</span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex px-2 py-0.5 text-[9px] font-black uppercase bg-green-50 text-green-600 border border-green-100 rounded">Paid</span>
+            <button
+              onClick={() => onDownload(apt)}
+              className="p-1.5 text-gray-400 hover:text-[#0EA5E9] hover:bg-sky-50 rounded-lg transition-all title='Download Receipt'"
+            >
+              <Icon path={icons.download} size={14} />
+            </button>
+          </div>
         ) : (
           <span className="inline-flex px-2 py-0.5 text-[9px] font-black uppercase bg-amber-50 text-amber-600 border border-amber-100 rounded">Unpaid</span>
         )}
@@ -229,6 +238,98 @@ const PatientDashboard = () => {
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
+  const downloadReceipt = (apt) => {
+    const doctorId = apt.doctorId || apt.sessionId?.doctorId;
+    const doctor = doctors.find(d => d.userId === doctorId || String(d._id) === String(doctorId));
+    const doctorName = doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : 'Medical Professional';
+    const date = new Date(apt.date || apt.sessionId?.date || apt.createdAt).toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    const receiptHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>BioGrid - Receipt - ${apt._id.slice(-6)}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+          <style>
+            body { font-family: 'Inter', sans-serif; padding: 60px; color: #111827; background: #f9fafb; line-height: 1.5; }
+            .receipt-container { max-width: 700px; margin: auto; background: white; padding: 50px; border-radius: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f3f4f6; padding-bottom: 30px; margin-bottom: 40px; }
+            .brand { font-size: 28px; font-weight: 800; color: #0EA5E9; letter-spacing: -0.05em; }
+            .receipt-title { text-align: right; }
+            .receipt-title h1 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; }
+            .receipt-title p { margin: 4px 0 0; font-size: 18px; font-weight: 800; }
+            .grid { display: grid; grid-cols: 2; gap: 40px; margin-bottom: 40px; }
+            .section-title { font-size: 12px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+            .info-box { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #f1f5f9; }
+            .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; }
+            .row:last-child { margin-bottom: 0; border-top: 1px dashed #e2e8f0; pt: 12px; mt: 12px; }
+            .label { color: #64748b; font-weight: 500; }
+            .value { font-weight: 600; color: #1e293b; }
+            .amount-section { margin-top: 40px; text-align: right; border-top: 2px solid #f3f4f6; padding-top: 20px; }
+            .total-label { font-size: 14px; font-weight: 600; color: #64748b; }
+            .total-value { font-size: 32px; font-weight: 800; color: #0EA5E9; margin-top: 4px; }
+            .status-badge { display: inline-block; padding: 6px 12px; background: #ecfdf5; color: #059669; border-radius: 9999px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+            .footer { margin-top: 60px; text-align: center; border-top: 1px solid #f3f4f6; padding-top: 30px; font-size: 13px; color: #9ca3af; }
+            .btn-print { position: fixed; bottom: 30px; right: 30px; padding: 12px 24px; background: #0EA5E9; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3); }
+            @media print { .btn-print { display: none; } body { padding: 0; background: white; } .receipt-container { box-shadow: none; border: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="receipt-container">
+            <div class="header">
+              <div class="brand">BioGrid</div>
+              <div class="receipt-title">
+                <h1>Consultation Receipt</h1>
+                <p>#REF-${apt._id.slice(-8).toUpperCase()}</p>
+              </div>
+            </div>
+            
+            <div style="display: flex; gap: 30px;">
+              <div style="flex: 1;">
+                <div class="section-title">Patient Details</div>
+                <div class="info-box">
+                  <p style="margin: 0; font-size: 18px; font-weight: 800;">${user?.username || user?.name}</p>
+                  <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">${user?.email}</p>
+                </div>
+              </div>
+              <div style="flex: 1;">
+                <div class="section-title">Consultation info</div>
+                <div class="info-box">
+                  <p style="margin: 0; font-size: 16px; font-weight: 700;">${doctorName}</p>
+                  <p style="margin: 4px 0 0; color: #0EA5E9; font-size: 12px; font-weight: 800; text-transform: uppercase;">${doctor?.specialty || 'General Practice'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 40px;">
+              <div class="section-title">Session Details</div>
+              <div class="row"><span class="label">Consultation Date</span> <span class="value">${date}</span></div>
+              <div class="row"><span class="label">Consultation Type</span> <span class="value" style="text-transform: capitalize;">${apt.appointmentType || 'Physical Clinic'} Session</span></div>
+              <div class="row"><span class="label">Payment Method</span> <span class="value">Online (Stripe/Card)</span></div>
+              <div class="row"><span class="label">Payment Status</span> <span class="status-badge">Payment Successful</span></div>
+            </div>
+
+            <div class="amount-section">
+              <span class="total-label">Total Amount Paid</span>
+              <div class="total-value">LKR ${(doctor?.consultationFee || 2500).toLocaleString()}.00</div>
+            </div>
+
+            <div class="footer">
+              <p>This is a computer-generated confirmation of your healthcare consultation payment.</p>
+              <p style="margin-top: 8px;">BioGrid Digital Health Network &copy; ${new Date().getFullYear()}</p>
+            </div>
+          </div>
+          <button class="btn-print" onclick="window.print()">Print Receipt</button>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank');
+    win.document.write(receiptHtml);
+    win.document.close();
+  };
+
   const navItems = [
     { id: 'overview', label: 'Overview', icon: 'home' },
     { id: 'appointments', label: 'Appointments', icon: 'calendar' },
@@ -237,21 +338,21 @@ const PatientDashboard = () => {
     { id: 'profile', label: 'My Profile', icon: 'user' },
   ];
 
-  const upcoming = appointments.filter((a) => a.status !== 'cancelled' && a.status !== 'completed');
+  const upcoming = appointments.filter((a) => a.status !== 'cancelled' && a.status !== 'completed' && !(a.appointmentType === 'online' || a.sessionId?.sessionType === 'online'));
   const completed = appointments.filter((a) => a.status === 'completed');
 
   const Sidebar = () => (
     <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
       {/* Logo */}
       <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
+        <Link to="/" className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full border-4 border-[#0EA5E9] flex items-center justify-center p-0.5">
             <div className="w-full h-full bg-[#0EA5E9] rounded-full flex items-center justify-center text-white">
               <Icon path={icons.plus} size={14} strokeWidth={4} />
             </div>
           </div>
-          <span className="font-black text-xl tracking-tighter text-[#0EA5E9]">MEDSTAR</span>
-        </div>
+          <span className="font-black text-xl tracking-tighter text-[#0EA5E9]">BioGrid</span>
+        </Link>
         <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-gray-700 transition-colors">
           <Icon path={icons.x} size={18} />
         </button>
@@ -352,7 +453,7 @@ const PatientDashboard = () => {
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard label="Upcoming" value={upcoming.length} icon="calendar" sub={`${upcoming.length > 0 ? 'Confirmed' : 'No'} appointments`} />
                     <StatCard label="Completed" value={completed.length} icon="activity" sub={`${completed.length} total visits`} />
-                    <StatCard label="Telemedicine" value={appointments.filter(a => a.appointmentType === 'online').length} icon="video" sub="Online sessions" />
+                    <StatCard label="Telemedicine" value={appointments.filter(a => a.appointmentType === 'online' || a.sessionId?.sessionType === 'online').length} icon="video" sub="Online sessions" />
                     <StatCard label="Prescriptions" value="—" icon="pill" sub="Profile verified" />
                   </div>
 
@@ -370,7 +471,7 @@ const PatientDashboard = () => {
                     ) : (
                       <div className="space-y-1">
                         {upcoming.slice(0, 3).map((apt) => (
-                          <AppointmentCard key={apt._id} apt={apt} doctors={doctors} onCancel={handleCancel} onEdit={handleEdit} />
+                          <AppointmentCard key={apt._id} apt={apt} doctors={doctors} onCancel={handleCancel} onEdit={handleEdit} onDownload={downloadReceipt} />
                         ))}
                       </div>
                     )}
@@ -384,7 +485,7 @@ const PatientDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-gray-900 text-xl font-bold">Appointments</h2>
-                      <p className="text-gray-500 text-sm mt-0.5">{appointments.length} total appointments</p>
+                      <p className="text-gray-500 text-sm mt-0.5">{appointments.filter(a => !(a.appointmentType === 'online' || a.sessionId?.sessionType === 'online')).length} appointments</p>
                     </div>
                     <button
                       onClick={() => setShowBookingModal(true)}
@@ -402,8 +503,8 @@ const PatientDashboard = () => {
                     </div>
                   ) : (
                     <div className="space-y-1">
-                      {appointments.map((apt) => (
-                        <AppointmentCard key={apt._id} apt={apt} doctors={doctors} onCancel={handleCancel} onEdit={handleEdit} />
+                      {appointments.filter(a => !(a.appointmentType === 'online' || a.sessionId?.sessionType === 'online')).map((apt) => (
+                        <AppointmentCard key={apt._id} apt={apt} doctors={doctors} onCancel={handleCancel} onEdit={handleEdit} onDownload={downloadReceipt} />
                       ))}
                     </div>
                   )}
@@ -412,7 +513,7 @@ const PatientDashboard = () => {
 
               {/* ---- TELEMEDICINE ---- */}
               {activeTab === 'telemedicine' && (
-                <TelemedicineTab user={user} doctors={doctors} appointments={appointments} setAppointments={setAppointments} navigate={navigate} onEdit={handleEdit} />
+                <TelemedicineTab user={user} doctors={doctors} appointments={appointments} setAppointments={setAppointments} navigate={navigate} onEdit={handleEdit} onDownload={downloadReceipt} />
               )}
 
               {/* ---- PAYMENTS ---- */}
@@ -591,7 +692,7 @@ const PatientDashboard = () => {
 };
 
 /* ─── Telemedicine Tab ────────────────────────────────────────── */
-const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigate, onEdit }) => {
+const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigate, onEdit, onDownload }) => {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [sessions, setSessions] = useState([]);
@@ -653,7 +754,7 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
       setError('Please fill in all required fields.');
       return;
     }
-    
+
     // We only book after payment succeeds
     setPendingAppointment({
       _id: "PENDING",
@@ -776,6 +877,11 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
                                 {apt.startTime && ` at ${apt.startTime}`}
                               </span>
                             </div>
+                            {apt.reasonForVisit && (
+                              <p className="text-[10px] text-gray-500/80 font-medium mt-1 truncate max-w-[250px]">
+                                <span className="text-gray-400 font-bold uppercase tracking-tighter mr-1 text-[9px]">Reason:</span> {apt.reasonForVisit}
+                              </p>
+                            )}
                             {apt.notes && (
                               <div className="mt-2.5 p-2 bg-sky-50/40 border border-sky-300/20 rounded-xl flex items-center gap-2 relative overflow-hidden group/note">
                                 <div className="w-1 absolute left-0 top-0 bottom-0 bg-[#2299C9]" />
@@ -792,6 +898,18 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
                         <div className="flex items-center gap-3 relative z-10 shrink-0">
                           {apt.status !== 'cancelled' ? (
                             <div className="flex items-center gap-2">
+                              {apt.paymentStatus === 'paid' && (
+                                <button
+                                  onClick={() => onDownload(apt)}
+                                  className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#0EA5E9] hover:border-[#0EA5E9] hover:bg-sky-50 transition-all"
+                                  title="Download Receipt"
+                                >
+                                  <Icon path={icons.download} size={14} />
+                                </button>
+                              )}
+                              {apt.paymentStatus === 'paid' && (
+                                <span className="px-2 py-1 text-[10px] font-black uppercase bg-green-50 text-green-600 border border-green-100 rounded-lg">Paid</span>
+                              )}
                               <button
                                 onClick={() => handleJoinCall(apt)}
                                 className="h-10 px-5 bg-[#2299C9] text-white rounded-xl font-bold text-sm hover:bg-[#1C82AB] transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20"
@@ -1078,7 +1196,7 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
                 paymentStatus: 'paid'
               });
               const bookedApt = bookRes.data?.data;
-              
+
               // 2. Link the payment to the real appointment ID
               await paymentAPI.confirm({
                 paymentId: orderId,
