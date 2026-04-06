@@ -73,13 +73,12 @@ export const getDoctorProfile = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Unauthorized, x-user-id missing' });
     }
 
-    const doctorProfile = await Doctor.findOne({ userId });
-
-    if (!doctorProfile) {
-      return res.status(404).json({ success: false, message: 'Doctor profile not found' });
+    const doctor = await Doctor.findOne({ userId });
+    if (!doctor) {
+      return res.status(200).json({ success: true, data: null, message: 'Doctor profile not found' });
     }
 
-    res.status(200).json({ success: true, data: doctorProfile });
+    res.status(200).json({ success: true, data: doctor });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

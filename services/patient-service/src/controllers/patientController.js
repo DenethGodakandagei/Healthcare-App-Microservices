@@ -12,7 +12,7 @@ export const getPatientProfile = async (req, res) => {
 
     const patient = await Patient.findOne({ userId });
     if (!patient) {
-      return res.status(404).json({ success: false, message: 'Patient profile not found' });
+      return res.status(200).json({ success: true, data: null, message: 'Patient profile not found' });
     }
 
     res.status(200).json({ success: true, data: patient });
