@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, telemedicineAPI } from '../../services/api';
+import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, telemedicineAPI, notificationAPI } from '../../services/api';
 import doc1 from '../../assets/doc1.png';
 import doc2 from '../../assets/doc2.png';
 import doc3 from '../../assets/doc3.png';
@@ -131,6 +131,11 @@ const PatientDashboard = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [editAppointment, setEditAppointment] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [messageDoctor, setMessageDoctor] = useState(null);
+  const [messageText, setMessageText] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -166,6 +171,19 @@ const PatientDashboard = () => {
           setDoctors(doctorsList);
         }
 
+        // Fetch Notifications
+        try {
+          if (user?.id || user?._id) {
+            const userId = user.id || user._id;
+            const notifsRes = await notificationAPI.getNotifications(userId);
+            const notifs = notifsRes.data?.notifications || [];
+            setNotifications(notifs);
+            setUnreadCount(notifs.filter(n => n.status === 'PENDING').length);
+          }
+        } catch (err) {
+          console.error('Failed to fetch notifications:', err);
+        }
+
         setAppointments(patientAppointments);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
@@ -174,7 +192,7 @@ const PatientDashboard = () => {
       }
     };
     load();
-  }, []);
+  }, [user]);
 
   const handleCancel = (id) => {
     setDeleteConfirmId(id);
@@ -212,6 +230,28 @@ const PatientDashboard = () => {
       console.error('Update failed:', error);
     }
   };
+  
+  const handleSendMessage = async () => {
+    if (!messageDoctor || !messageText.trim()) return;
+    setSendingMessage(true);
+    try {
+      await notificationAPI.send({
+        senderId: user.id || user._id,
+        receiverId: messageDoctor.userId || messageDoctor._id,
+        role: 'patient',
+        message: messageText,
+        type: 'chat'
+      });
+      setMessageDoctor(null);
+      setMessageText('');
+      alert('Message sent to the doctor successfully!');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      alert('Failed to send message. Please try again.');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -219,6 +259,7 @@ const PatientDashboard = () => {
     { id: 'overview', label: 'Overview', icon: 'home' },
     { id: 'appointments', label: 'Appointments', icon: 'calendar' },
     { id: 'telemedicine', label: 'Telemedicine', icon: 'video' },
+    { id: 'notifications', label: 'Notifications', icon: 'bell' },
     { id: 'profile', label: 'My Profile', icon: 'user' },
   ];
 
@@ -307,9 +348,12 @@ const PatientDashboard = () => {
             </h1>
             <p className="text-gray-400 text-xs mt-0.5">Patient Portal</p>
           </div>
-          <button className="relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100">
+          <button 
+            onClick={() => setActiveTab('notifications')}
+            className={`relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100 ${activeTab === 'notifications' ? 'bg-sky-50 text-[#0EA5E9]' : ''}`}
+          >
             <Icon path={icons.bell} size={20} />
-            {upcoming.length > 0 && (
+            {(unreadCount > 0 || upcoming.length > 0) && (
               <span className="absolute top-1 right-1 w-2 h-2 bg-[#2299C9] rounded-full" />
             )}
           </button>
@@ -400,6 +444,11 @@ const PatientDashboard = () => {
                 <TelemedicineTab user={user} doctors={doctors} appointments={appointments} setAppointments={setAppointments} navigate={navigate} onEdit={handleEdit} />
               )}
 
+              {/* ---- NOTIFICATIONS ---- */}
+              {activeTab === 'notifications' && (
+                <NotificationsTab notifications={notifications} />
+              )}
+
               {/* ---- PROFILE ---- */}
               {activeTab === 'profile' && (
                 <div className="max-w-lg space-y-5">
@@ -460,6 +509,68 @@ const PatientDashboard = () => {
       {/* Modals */}
       <AppointmentBookingWizard open={showBookingModal} onClose={() => setShowBookingModal(false)} />
       <ConfirmDeleteModal open={!!deleteConfirmId} onConfirm={confirmCancel} onCancel={() => setDeleteConfirmId(null)} />
+      
+      {/* Send Message Modal */}
+      {messageDoctor && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="p-8 pb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Message Specialist</h3>
+                <p className="text-gray-400 text-xs font-medium uppercase tracking-widest mt-1">Direct communication channel</p>
+              </div>
+              <button onClick={() => setMessageDoctor(null)} className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors">
+                <Icon path={icons.x} size={20} />
+              </button>
+            </div>
+            
+            <div className="p-8 pt-4 space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-sky-50/50 rounded-2xl border border-sky-100">
+                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm">
+                  <img src={getDoctorImage(messageDoctor.userId || '')} alt="Doctor" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="text-gray-900 font-bold">Dr. {messageDoctor.firstName} {messageDoctor.lastName}</p>
+                  <p className="text-[#0EA5E9] text-[10px] font-black uppercase tracking-wider">{messageDoctor.specialty}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5 ml-1">Your Message</label>
+                <textarea
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  placeholder="Describe your symptoms or ask a question..."
+                  className="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm focus:ring-4 focus:ring-sky-500/10 focus:border-[#2299C9] outline-none transition-all resize-none font-medium text-gray-700 min-h-[160px]"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setMessageDoctor(null)}
+                  className="flex-1 h-14 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition-all active:scale-[0.98]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendMessage}
+                  disabled={sendingMessage || !messageText.trim()}
+                  className="flex-1 h-14 bg-[#2299C9] text-white rounded-2xl font-bold hover:bg-[#1C82AB] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2 shadow-xl shadow-sky-500/20"
+                >
+                  {sendingMessage ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Icon path={<><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></>} size={18} />
+                      Send Message
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Appointment Modal */}
       {showEditModal && editAppointment && (
@@ -509,6 +620,69 @@ const PatientDashboard = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── Notifications Tab ────────────────────────────────────────── */
+const NotificationsTab = ({ notifications }) => {
+  const getIcon = (type) => {
+    switch (type) {
+      case 'chat': return <Icon path={icons.menu} size={18} />; // Replace with a chat icon if available
+      case 'email': return <Icon path={icons.pill} size={18} />; // Generic icon
+      case 'sms': return <Icon path={icons.user} size={18} />; // Generic icon
+      default: return <Icon path={icons.bell} size={18} />;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-gray-900 text-xl font-bold">Notifications</h2>
+        <p className="text-gray-500 text-sm mt-0.5">Stay updated with your healthcare activities</p>
+      </div>
+
+      {notifications.length === 0 ? (
+        <div className="bg-white border-2 border-dashed border-gray-100 rounded-[2rem] p-12 text-center flex flex-col items-center justify-center">
+          <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300 mb-4">
+            <Icon path={icons.bell} size={32} />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">No Notifications</h3>
+          <p className="text-gray-400 text-sm max-w-xs mx-auto">
+            You're all caught up! New updates about your appointments and health will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {notifications.map((notif) => (
+            <div 
+              key={notif._id} 
+              className={`bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition-all group ${notif.status === 'PENDING' ? 'border-sky-100 bg-sky-50/10' : ''}`}
+            >
+              <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center ${
+                notif.type === 'chat' ? 'bg-sky-50 text-sky-500' : 
+                notif.type === 'email' ? 'bg-emerald-50 text-emerald-500' : 
+                'bg-purple-50 text-purple-500'
+              }`}>
+                {getIcon(notif.type)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                    {notif.type} • {new Date(notif.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                  {notif.status === 'PENDING' && (
+                    <span className="w-2 h-2 bg-[#2299C9] rounded-full" />
+                  )}
+                </div>
+                <p className="text-gray-800 text-sm font-medium leading-relaxed">
+                  {notif.message}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -70,4 +70,10 @@ export const telemedicineAPI = {
   getMessages: (sessionId) => API.get(`/telemedicine/${sessionId}/chat`),
 };
 
+// Notifications
+export const notificationAPI = {
+  getNotifications: (receiverId) => API.get(`/notifications/${receiverId}`),
+  send: (data) => API.post('/notifications/send', data),
+};
+
 export default API;
