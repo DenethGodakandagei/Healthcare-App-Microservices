@@ -26,15 +26,24 @@ export const getPatientProfile = async (req, res) => {
 // @access  Private (via Gateway)
 export const createPatient = async (req, res) => {
   try {
-    const { name, age, gender, medicalHistory } = req.body;
-    const userId = req.headers['x-user-id'];
+    const { name, age, gender, medicalHistory, userId: bodyUserId } = req.body;
+    const currentUserId = req.headers['x-user-id'];
+    const userRole = req.headers['x-user-role'];
 
-    if (!userId) {
+    // Determine which userId to use
+    let finalUserId;
+    if (userRole === 'admin' && bodyUserId) {
+      // Admin can specify a userId for the patient
+      finalUserId = bodyUserId;
+    } else if (currentUserId) {
+      // Regular user uses their own ID
+      finalUserId = currentUserId;
+    } else {
       return res.status(401).json({ success: false, message: 'User identity not found' });
     }
 
     const patient = await Patient.create({
-      userId,
+      userId: finalUserId,
       name,
       age,
       gender,
@@ -51,13 +60,23 @@ export const createPatient = async (req, res) => {
   }
 };
 
-// @desc    Get all patients for the logged-in user
+// @desc    Get all patients (admin sees all, regular users see only their own)
 // @route   GET /api/patients
 // @access  Private
 export const getPatients = async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
-    const patients = await Patient.find({ userId });
+    const userRole = req.headers['x-user-role'];
+
+    let patients;
+    if (userRole === 'admin') {
+      // Admin can see all patients
+      patients = await Patient.find({});
+    } else {
+      // Regular users see only their own patients
+      patients = await Patient.find({ userId });
+    }
+
     res.json({
       success: true,
       message: 'Patients retrieved successfully',
@@ -79,8 +98,9 @@ export const getPatientById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Patient not found' });
     }
 
-    // Security check: ensure the patient belongs to the user
-    if (patient.userId !== req.headers['x-user-id']) {
+    const userRole = req.headers['x-user-role'];
+    // Admin can view any patient, otherwise ensure the patient belongs to the user
+    if (userRole !== 'admin' && patient.userId !== req.headers['x-user-id']) {
       return res.status(403).json({ success: false, message: 'Not authorized to view this patient' });
     }
 
@@ -105,13 +125,18 @@ export const updatePatient = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Patient not found' });
     }
 
-    if (patient.userId !== req.headers['x-user-id']) {
+    const userRole = req.headers['x-user-role'];
+    // Admin can update any patient, otherwise ensure the patient belongs to the user
+    if (userRole !== 'admin' && patient.userId !== req.headers['x-user-id']) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this patient' });
     }
 
+    // Explicitly exclude userId from updates - it's immutable
+    const { userId, ...allowedUpdates } = req.body;
+
     const updatedPatient = await Patient.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      allowedUpdates,
       { new: true }
     );
 
@@ -136,7 +161,9 @@ export const deletePatient = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Patient not found' });
     }
 
-    if (patient.userId !== req.headers['x-user-id']) {
+    const userRole = req.headers['x-user-role'];
+    // Admin can delete any patient, otherwise ensure the patient belongs to the user
+    if (userRole !== 'admin' && patient.userId !== req.headers['x-user-id']) {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this patient' });
     }
 

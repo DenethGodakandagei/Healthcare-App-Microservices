@@ -46,8 +46,15 @@ const LoginPage = () => {
     }
     setLoading(true);
     try {
-      await login(form.email, form.password);
-      navigate('/');
+      const user = await login(form.email, form.password);
+      // Redirect based on user role
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (user.role === 'doctor') {
+        navigate('/doctor/dashboard');
+      } else {
+        navigate('/patient/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'The credentials you provided are incorrect. Please verify your identity.');
     } finally {

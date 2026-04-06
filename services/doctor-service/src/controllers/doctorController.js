@@ -117,3 +117,97 @@ export const updateDoctorProfile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Update doctor by ID (Admin only)
+// @route   PUT /api/doctors/:id
+// @access  Private (Admin)
+export const updateDoctor = async (req, res) => {
+  try {
+    const { firstName, lastName, specialty, experienceYears, contactNumber, consultationFee, availability, userId } = req.body;
+    const doctor = await Doctor.findById(req.params.id);
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+
+    // Update fields - explicitly exclude userId which is immutable
+    if (firstName !== undefined) doctor.firstName = firstName;
+    if (lastName !== undefined) doctor.lastName = lastName;
+    if (specialty !== undefined) doctor.specialty = specialty;
+    if (experienceYears !== undefined) doctor.experienceYears = experienceYears;
+    if (contactNumber !== undefined) doctor.contactNumber = contactNumber;
+    if (consultationFee !== undefined) doctor.consultationFee = consultationFee;
+    if (availability !== undefined) doctor.availability = availability;
+    // Ignore userId if provided - it cannot be changed
+
+    await doctor.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Doctor updated successfully',
+      data: doctor
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete doctor by ID (Admin only)
+// @route   DELETE /api/doctors/:id
+// @access  Private (Admin)
+export const deleteDoctor = async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id);
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+
+    await doctor.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Doctor removed successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Create doctor by admin (Admin only)
+// @route   POST /api/doctors
+// @access  Private (Admin)
+export const createDoctor = async (req, res) => {
+  try {
+    const { firstName, lastName, specialty, experienceYears, contactNumber, consultationFee, availability, userId } = req.body;
+
+    if (!firstName || !lastName || !specialty || !experienceYears || !contactNumber || !consultationFee || !userId) {
+      return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+    }
+
+    // Check if doctor profile already exists for this userId
+    const existingDoctor = await Doctor.findOne({ userId });
+    if (existingDoctor) {
+      return res.status(400).json({ success: false, message: 'Doctor profile already exists for this user' });
+    }
+
+    const doctor = await Doctor.create({
+      userId,
+      firstName,
+      lastName,
+      specialty,
+      experienceYears: Number(experienceYears),
+      contactNumber,
+      consultationFee: Number(consultationFee),
+      availability: Array.isArray(availability) ? availability : []
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Doctor created successfully',
+      data: doctor
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
