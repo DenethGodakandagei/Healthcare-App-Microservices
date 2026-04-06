@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { doctorAPI } from '../services/api';
+import { doctorAPI, chatAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Icon = ({ path, size = 20, className = "" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -17,6 +18,7 @@ const icons = {
   chevronRight: <polyline points="9 18 15 12 9 6"/>,
   clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
   activity: <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>,
+  chat: <><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></>,
 };
 
 import doc1 from '../assets/doc1.png';
@@ -27,6 +29,8 @@ import doc4 from '../assets/doc4.png';
 const doctorImages = [doc1, doc2, doc3, doc4];
 
 const DoctorsPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
   const [filteredDoctors, setFilteredDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +68,22 @@ const DoctorsPage = () => {
     });
     setFilteredDoctors(filtered);
   }, [search, specialty, doctors]);
+
+  const handleChat = async (doctor) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    try {
+      const res = await chatAPI.accessChat(doctor.userId || doctor._id);
+      const chat = res.data;
+      navigate(`/chat/${chat._id}`);
+    } catch (err) {
+      console.error("Failed to start chat:", err);
+      const errorMsg = err.response?.data?.message || err.message || "Unknown error";
+      alert("Unable to start chat: " + errorMsg);
+    }
+  };
 
   const specialties = ['All', ...new Set(doctors.map(d => d.specialty))];
 
@@ -148,11 +168,20 @@ const DoctorsPage = () => {
                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Fee</p>
                          <p className="text-lg font-extrabold text-gray-900">${doc.consultationFee}</p>
                       </div>
+                      <button
+                        onClick={() => handleChat(doc)}
+                        className="bg-gray-100 text-gray-900 rounded-2xl flex flex-col items-center justify-center p-4 hover:bg-gray-200 transition-all border border-gray-200"
+                      >
+                         <div className="flex items-center gap-2">
+                           <Icon path={icons.chat} size={14} />
+                           <p className="text-sm font-bold">Chat Now</p>
+                         </div>
+                      </button>
                       <Link
                         to={`/booking/${doc._id}`}
                         className="bg-gray-900 text-white rounded-2xl flex flex-col items-center justify-center p-4 hover:bg-gray-800 transition-all shadow-lg shadow-gray-200"
                       >
-                         <p className="text-sm font-bold">Book Appointment</p>
+                         <p className="text-sm font-bold">Book Now</p>
                       </Link>
                    </div>
                 </div>

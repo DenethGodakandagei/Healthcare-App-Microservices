@@ -235,18 +235,22 @@ const PatientDashboard = () => {
     if (!messageDoctor || !messageText.trim()) return;
     setSendingMessage(true);
     try {
-      await notificationAPI.send({
-        senderId: user.id || user._id,
-        receiverId: messageDoctor.userId || messageDoctor._id,
-        role: 'patient',
-        message: messageText,
-        type: 'chat'
+      // 1. Access/Create Chat
+      const chatRes = await chatAPI.accessChat(messageDoctor.userId || messageDoctor._id);
+      const chat = chatRes.data;
+
+      // 2. Send the first message
+      await messageAPI.sendMessage({
+        chatId: chat._id,
+        content: messageText
       });
+
+      // 3. Clear and Navigate
       setMessageDoctor(null);
       setMessageText('');
-      alert('Message sent to the doctor successfully!');
+      navigate(`/chat/${chat._id}`);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error('Failed to start chat:', error);
       alert('Failed to send message. Please try again.');
     } finally {
       setSendingMessage(false);

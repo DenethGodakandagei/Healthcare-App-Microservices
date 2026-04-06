@@ -76,4 +76,19 @@ export const notificationAPI = {
   send: (data) => API.post('/notifications/send', data),
 };
 
+export const chatAPI = {
+  accessChat: (userId) => API.post('/chat', { userId }),
+  fetchChats: () => API.get('/chat'),
+  getChatById: (chatId) => API.get(`/chat/${chatId}`),
+  createGroup: (data) => API.post('/chat/group', data),
+  renameGroup: (data) => API.put('/chat/rename', data),
+  addToGroup: (data) => API.put('/chat/groupadd', data),
+  removeFromGroup: (data) => API.put('/chat/groupremove', data),
+};
+
+export const messageAPI = {
+  getMessages: (chatId) => API.get(`/message/${chatId}`),
+  sendMessage: (data) => API.post('/message', data),
+};
+
 export default API;
