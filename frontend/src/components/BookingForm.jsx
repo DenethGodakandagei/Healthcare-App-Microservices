@@ -7,10 +7,10 @@ const Icon = ({ path, size = 20, className = "" }) => (
 );
 
 const icons = {
-  user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
-  alert: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
-  phone: <><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></>,
-  id: <><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><line x1="15" y1="8" x2="19" y2="8"/><line x1="15" y1="12" x2="19" y2="12"/><line x1="15" y1="16" x2="19" y2="16"/><line x1="8" y1="16" x2="13" y2="16"/></>,
+  user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+  alert: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>,
+  phone: <><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></>,
+  id: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><line x1="15" y1="8" x2="19" y2="8" /><line x1="15" y1="12" x2="19" y2="12" /><line x1="15" y1="16" x2="19" y2="16" /><line x1="8" y1="16" x2="13" y2="16" /></>,
 };
 
 const BookingForm = ({
@@ -38,7 +38,7 @@ const BookingForm = ({
           <h3 className="text-3xl font-black text-gray-900 tracking-tight">Confirm Appointment</h3>
           <p className="text-gray-400 font-medium text-sm mt-1">Please provide the visitor's identification details.</p>
         </div>
-        <button 
+        <button
           onClick={onFillSelf}
           disabled={loadingProfile}
           className="group flex items-center gap-2 text-[10px] font-black text-gray-500 hover:text-gray-900 transition-all uppercase tracking-[0.2em] bg-gray-50 hover:bg-gray-100 px-6 py-3 rounded-2xl border border-gray-100"
@@ -51,7 +51,7 @@ const BookingForm = ({
           {loadingProfile ? 'Fetching...' : 'Use My Details'}
         </button>
       </div>
-      
+
       <div className="space-y-10">
         {/* Patient Details Grid */}
         <div className="grid md:grid-cols-2 gap-8">
@@ -117,10 +117,10 @@ const BookingForm = ({
 
         {error && (
           <div className="flex items-center gap-4 p-5 bg-red-50/50 border border-red-100 rounded-[1.5rem] text-red-600 animate-in fade-in slide-in-from-left-4 duration-300">
-             <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
-               <Icon path={icons.alert} size={20} />
-             </div>
-             <p className="text-sm font-bold opacity-90">{error}</p>
+            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+              <Icon path={icons.alert} size={20} />
+            </div>
+            <p className="text-sm font-bold opacity-90">{error}</p>
           </div>
         )}
 

@@ -3,7 +3,8 @@ import {
   createPaymentIntent,
   confirmPayment,
   getPatientPayments,
-  getAllPayments
+  getAllPayments,
+  handlePayHereNotify
 } from '../controllers/paymentController.js';
 
 const router = express.Router();
@@ -13,6 +14,9 @@ router.route('/intent')
 
 router.route('/confirm')
   .post(confirmPayment);
+
+router.route('/notify')
+  .post(handlePayHereNotify);
 
 router.route('/patient')
   .get(getPatientPayments);

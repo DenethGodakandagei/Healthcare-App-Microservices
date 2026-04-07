@@ -75,4 +75,11 @@ export const notificationAPI = {
 };
 
 
+// Payments
+export const paymentAPI = {
+  createIntent: (data) => API.post('/payments/intent', data),
+  confirm: (data) => API.post('/payments/confirm', data),
+  getPatientPayments: () => API.get('/payments/patient'),
+};
+
 export default API;

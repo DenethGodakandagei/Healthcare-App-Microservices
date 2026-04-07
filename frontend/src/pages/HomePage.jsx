@@ -116,7 +116,7 @@ const HomePage = () => {
       <section id="features" className="py-24 bg-[#FAFAFC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto mb-20 space-y-6">
-            <div className="inline-block px-4 py-1.5 bg-[#EFF3FF] text-[#427CFF] rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+            <div className="inline-block px-4 py-1.5 bg-[#EFFBFF] text-[#2299C9] rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4">
               For Providers
             </div>
             <h2 className="text-4xl md:text-6xl font-black text-[#111] leading-tight flex flex-col items-center">
@@ -188,7 +188,7 @@ const HomePage = () => {
             </div>
 
             {/* 5. Advanced Reporting - Blue Card */}
-            <div className="bg-[#427CFF] rounded-[2.5rem] p-8 flex flex-col justify-between shadow-xl shadow-blue-500/20 group hover:-translate-y-1 transition-all">
+            <div className="bg-[#2299C9] rounded-[2.5rem] p-8 flex flex-col justify-between shadow-xl shadow-blue-400/10 group hover:-translate-y-1 transition-all">
               <h3 className="text-white font-black text-lg leading-tight">Advanced Reporting <br /> & Analytics</h3>
               <div className="flex items-end gap-1.5 h-12 mt-6">
                 <div className="flex-1 bg-white/20 rounded-sm h-[40%]" />
@@ -207,7 +207,7 @@ const HomePage = () => {
             </div>
 
             {/* 7. Clinical Decision Support - Blue Card */}
-            <div className="bg-[#427CFF] rounded-[2.5rem] p-8 flex flex-col justify-between shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 group">
+            <div className="bg-[#2299C9] rounded-[2.5rem] p-8 flex flex-col justify-between shadow-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 group">
               <h3 className="text-white font-black text-lg leading-tight">Clinical Decision <br /> Support</h3>
               <div className="ml-auto w-12 h-12 rounded-full border-2 border-white/20 flex items-center justify-center">
                 <div className="w-2 h-2 bg-white rounded-full animate-ping" />
@@ -314,7 +314,7 @@ const HomePage = () => {
 
       {/* Contact Section - Industrial Blue Box */}
       <section id="contact" className="py-24 max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden bg-[#427CFF] rounded-[3.5rem] p-12 lg:p-20 shadow-2xl shadow-blue-500/20 group">
+        <div className="relative overflow-hidden bg-[#2299C9] rounded-[3.5rem] p-12 lg:p-20 shadow-2xl shadow-sky-400/20 group">
           <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[40rem] h-[40rem] opacity-20 pointer-events-none group-hover:scale-110 transition-transform duration-[3000ms]">
             <div className="w-full h-full rounded-full border-[1.5px] border-white/40 border-dashed animate-[spin_60s_linear_infinite]" />
             <div className="absolute inset-8 rounded-full border-[2px] border-white/20 border-dotted animate-[spin_45s_linear_infinite_reverse]" />
@@ -352,7 +352,7 @@ const HomePage = () => {
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">Call us</p>
-                  <p className="text-xl font-bold text-white">+9 999 999 999</p>
+                  <p className="text-xl font-bold text-white">+94 76 854 42 56</p>
                 </div>
               </div>
             </div>
@@ -364,7 +364,7 @@ const HomePage = () => {
               </div>
               <form className="space-y-6">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-[#427CFF]">Your Full Name</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[#2299C9]">Your Full Name</label>
                   <input
                     type="text"
                     placeholder="Enter your name"
@@ -372,7 +372,7 @@ const HomePage = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-[#427CFF]">Email Address</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[#2299C9]">Email Address</label>
                   <input
                     type="email"
                     placeholder="name@company.com"
@@ -380,14 +380,14 @@ const HomePage = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-[#427CFF]">Your Message</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[#2299C9]">Your Message</label>
                   <textarea
                     rows="3"
                     placeholder="Tell us about your needs..."
                     className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 transition-all  text-gray-900 placeholder:text-gray-300 outline-none resize-none"
                   ></textarea>
                 </div>
-                <button className="w-full py-4 bg-[#427CFF] text-white font-black rounded-2xl hover:bg-blue-600 transition-all shadow-xl shadow-blue-200 active:scale-[0.98]">
+                <button className="w-full py-4 bg-[#2299C9] text-white font-black rounded-2xl hover:bg-[#1C82AB] transition-all shadow-xl shadow-sky-100 active:scale-[0.98]">
                   Send Message
                 </button>
               </form>

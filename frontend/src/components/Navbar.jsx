@@ -94,8 +94,8 @@ const Navbar = () => {
                 to={link.path}
                 onClick={(e) => handleNavClick(e, link.path)}
                 className={`text-[15px] font-semibold tracking-wide transition-all duration-500 ${isHeroMode
-                    ? 'text-white hover:text-white/80 [text-shadow:_0_1px_4px_rgba(0,0,0,0.4)]'
-                    : (location.pathname === link.path ? 'text-black font-semibold' : 'text-black/60 hover:text-black')
+                  ? 'text-white hover:text-white/80 [text-shadow:_0_1px_4px_rgba(0,0,0,0.4)]'
+                  : (location.pathname === link.path ? 'text-black font-semibold' : 'text-black/60 hover:text-black')
                   }`}
               >
                 {link.name}
@@ -154,8 +154,8 @@ const Navbar = () => {
               <Link
                 to="/register"
                 className={`group h-14 px-10 rounded-2xl text-[13px] font-medium uppercase tracking-[0.2em] transition-all duration-700 flex items-center justify-center ${isHeroMode
-                    ? 'bg-white text-black hover:bg-white/90'
-                    : 'bg-black text-white hover:bg-black/90'
+                  ? 'bg-white text-black hover:bg-white/90'
+                  : 'bg-black text-white hover:bg-black/90'
                   }`}
               >
                 Get started

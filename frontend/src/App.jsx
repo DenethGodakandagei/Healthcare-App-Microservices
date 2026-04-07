@@ -50,6 +50,7 @@ function App() {
           >
             <Route index element={<Overview />} />
             <Route path="appointments" element={<Appointments />} />
+            <Route path="physical" element={<Appointments />} />
             <Route path="availability" element={<Availability />} />
             <Route path="credentials" element={<Credentials />} />
             <Route path="notifications" element={<Notifications />} />

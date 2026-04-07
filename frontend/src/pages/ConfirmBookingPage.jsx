@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import BookingForm from '../components/BookingForm';
 import BookingSuccess from '../components/BookingSuccess';
+import PaymentCheckout from '../components/PaymentCheckout';
 import { doctorAPI, sessionAPI, appointmentAPI, patientAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import doc1 from '../assets/doc1.png';
@@ -32,6 +33,8 @@ const ConfirmBookingPage = () => {
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [pendingAppointment, setPendingAppointment] = useState(null);
 
   const [patientName, setPatientName] = useState('');
   const [patientNIC, setPatientNIC] = useState('');
@@ -101,7 +104,8 @@ const ConfirmBookingPage = () => {
         patientPhone,
         appointmentType: isOnline ? 'online' : 'physical'
       });
-      setSuccess(res.data?.data);
+      setPendingAppointment(res.data?.data);
+      setShowPayment(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error("Booking Error:", err);
@@ -128,9 +132,16 @@ const ConfirmBookingPage = () => {
 
       <div className="pt-32 pb-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          
+
           {success ? (
             <BookingSuccess appointment={success} doctor={doctor} />
+          ) : showPayment ? (
+            <PaymentCheckout
+              appointment={pendingAppointment}
+              doctor={doctor}
+              onShowSuccess={() => setSuccess(pendingAppointment)}
+              onCancel={() => setShowPayment(false)}
+            />
           ) : (
             <div className="space-y-12">
               {/* Specialized Header */}
@@ -144,40 +155,40 @@ const ConfirmBookingPage = () => {
 
               {/* Summary Card */}
               <div className="bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-xl shadow-gray-100/50 flex flex-col md:flex-row gap-8 items-center justify-between overflow-hidden relative">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                 
-                 <div className="flex items-center gap-6 relative z-10">
-                    <div className="w-20 h-20 bg-gray-50 rounded-2xl overflow-hidden border-2 border-white shadow-md">
-                      <img
-                        src={getDoctorImage(doctor._id)}
-                        alt={doctor.firstName}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                     <div>
-                       <h3 className="text-xl font-black text-gray-900 leading-tight">Dr. {doctor.firstName} {doctor.lastName}</h3>
-                       <div className="flex items-center gap-2 mt-1">
-                         <p className="text-indigo-500 text-xs font-bold uppercase tracking-widest">{doctor.specialty}</p>
-                         {isOnline && (
-                           <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-[9px] font-black uppercase tracking-widest rounded-full">Video Call</span>
-                         )}
-                       </div>
-                     </div>
-                 </div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
-                 <div className="flex gap-8 relative z-10 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-8 w-full md:w-auto">
-                    <div className="flex-1 md:flex-none">
-                      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Date</p>
-                      <p className="text-gray-900 font-black truncate">{new Date(session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' })}</p>
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-20 h-20 bg-gray-50 rounded-2xl overflow-hidden border-2 border-white shadow-md">
+                    <img
+                      src={getDoctorImage(doctor._id)}
+                      alt={doctor.firstName}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-gray-900 leading-tight">Dr. {doctor.firstName} {doctor.lastName}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-indigo-500 text-xs font-bold uppercase tracking-widest">{doctor.specialty}</p>
+                      {isOnline && (
+                        <span className="px-2 py-0.5 bg-purple-100 text-purple-600 text-[9px] font-black uppercase tracking-widest rounded-full">Video Call</span>
+                      )}
                     </div>
-                    <div className="flex-1 md:flex-none">
-                      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Time</p>
-                      <p className="text-gray-900 font-black truncate">{session.startTime} – {session.endTime}</p>
-                    </div>
-                 </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-8 relative z-10 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-8 w-full md:w-auto">
+                  <div className="flex-1 md:flex-none">
+                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Date</p>
+                    <p className="text-gray-900 font-black truncate">{new Date(session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' })}</p>
+                  </div>
+                  <div className="flex-1 md:flex-none">
+                    <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Time</p>
+                    <p className="text-gray-900 font-black truncate">{session.startTime} – {session.endTime}</p>
+                  </div>
+                </div>
               </div>
 
-              <BookingForm 
+              <BookingForm
                 selectedSession={session}
                 patientName={patientName}
                 setPatientName={setPatientName}
