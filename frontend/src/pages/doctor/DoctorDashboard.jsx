@@ -187,6 +187,7 @@ const DoctorDashboard = () => {
               onClick={() => navigate('/doctor/dashboard/notifications')}
               className={`relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100 ${isPathActive('/doctor/dashboard/notifications') ? 'bg-sky-50 text-[#0EA5E9]' : ''}`}
              >
+              </button>
 
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
