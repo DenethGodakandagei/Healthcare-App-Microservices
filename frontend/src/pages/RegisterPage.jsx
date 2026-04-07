@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { doctorAPI } from '../services/api';
+import { doctorAPI, patientAPI } from '../services/api';
 import doctorHero from '../assets/doctor-hero.png';
 
 const Icon = ({ path, size = 20, className = "" }) => (
@@ -59,6 +59,15 @@ const RegisterPage = () => {
         await doctorAPI.createProfile({
           firstName: form.firstName, lastName: form.lastName, specialty: form.specialty,
           experienceYears: Number(form.experienceYears), contactNumber: form.contactNumber, consultationFee: Number(form.consultationFee)
+        });
+      } else if (user.role === 'patient') {
+        // Create patient profile for new patient user
+        await patientAPI.create({
+          name: form.username, // use username as patient name
+          age: 0, // default, user can update later
+          gender: '',
+          medicalHistory: [],
+          userId: user.id
         });
       }
       navigate(user.role === 'doctor' ? '/doctor/dashboard' : '/patient/dashboard');

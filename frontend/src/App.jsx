@@ -15,6 +15,7 @@ import Availability from './components/doctor/Availability';
 import Credentials from './components/doctor/Credentials';
 import Notifications from './components/doctor/Notifications';
 import VideoCallPage from './pages/VideoCallPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 function App() {
   return (
@@ -62,6 +63,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <VideoCallPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin protected route */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRole="admin">
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

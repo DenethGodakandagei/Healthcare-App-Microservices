@@ -4,6 +4,7 @@ import {
   getPatientAppointments,
   getDoctorAppointments,
   getAppointmentById,
+  getAllAppointments,
   updateAppointmentStatus,
   createSession,
   getSessions,
@@ -27,6 +28,7 @@ router.route('/sessions/:id')
 
 // Appointment Routes
 router.route('/')
+  .get(getAllAppointments)
   .post(bookAppointment);
 
 router.route('/patient')
