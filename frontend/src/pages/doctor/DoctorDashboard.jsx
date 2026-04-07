@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, NavLink, Link, Outlet, useLocation } from 'react-router-dom';
-import { doctorAPI } from '../../services/api';
+import { doctorAPI, notificationAPI } from '../../services/api';
 
 /* ─── Icon helper ─────────────────────────────────────────────── */
 const Icon = ({ path, size = 20, className = '', strokeWidth = '1.8' }) => (
@@ -31,6 +31,8 @@ const DoctorDashboard = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -38,11 +40,24 @@ const DoctorDashboard = () => {
         const [aptR, profR] = await Promise.allSettled([doctorAPI.getAppointments(), doctorAPI.getProfile()]);
         if (aptR.status === 'fulfilled') setAppointments(aptR.value.data?.data || aptR.value.data || []);
         if (profR.status === 'fulfilled') setProfile(profR.value.data?.data || profR.value.data);
+
+        // Fetch Notifications
+        try {
+          if (user?.id || user?._id) {
+            const userId = user.id || user._id;
+            const notifsRes = await notificationAPI.getNotifications(userId);
+            const notifs = notifsRes.data?.notifications || [];
+            setNotifications(notifs);
+            setUnreadCount(notifs.filter(n => n.status === 'PENDING').length);
+          }
+        } catch (err) {
+          console.error('Failed to fetch notifications:', err);
+        }
       } catch (_) { }
       setLoading(false);
     };
     load();
-  }, []);
+  }, [user]);
 
   const pending = appointments.filter(a => a.status === 'pending');
   const confirmed = appointments.filter(a => a.status === 'confirmed');
@@ -50,7 +65,9 @@ const DoctorDashboard = () => {
   const navItems = [
     { id: 'overview', label: 'Overview', icon: 'home', path: '/doctor/dashboard' },
     { id: 'appointments', label: 'Video Consultations', icon: 'calendar', path: '/doctor/dashboard/appointments' },
+    { id: 'notifications', label: 'Notifications', icon: 'bell', path: '/doctor/dashboard/notifications' },
     { id: 'physical', label: 'Physical Consultations', icon: 'user', path: '/doctor/dashboard/physical' },
+
     { id: 'sessions', label: 'Clinic Availability', icon: 'sessions', path: '/doctor/dashboard/availability' },
     { id: 'profile', label: 'Professional Profile', icon: 'shield', path: '/doctor/dashboard/credentials' },
   ];
@@ -119,6 +136,9 @@ const DoctorDashboard = () => {
             {item.id === 'appointments' && pending.length > 0 && (
               <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px] text-white font-bold">{pending.length}</span>
             )}
+            {item.id === 'notifications' && unreadCount > 0 && (
+              <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px] text-white font-bold">{unreadCount}</span>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -158,13 +178,24 @@ const DoctorDashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
+
+             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">On Duty</span>
+             </div>
+             <button 
+              onClick={() => navigate('/doctor/dashboard/notifications')}
+              className={`relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100 ${isPathActive('/doctor/dashboard/notifications') ? 'bg-sky-50 text-[#0EA5E9]' : ''}`}
+             >
+
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
               <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">On Duty</span>
             </div>
             <button className="relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100">
+
               <Icon path={icons.bell} size={20} />
-              {pending.length > 0 && (
+              {(unreadCount > 0 || pending.length > 0) && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-[#2299C9] rounded-full" />
               )}
             </button>

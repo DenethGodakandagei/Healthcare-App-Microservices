@@ -1,13 +1,15 @@
 import express from "express";
-import * as notificationController from "../controllers/notificationController.js";
+import {
+    sendNotification,
+    getNotifications
+} from "../controllers/notificationController.js";
 
 const router = express.Router();
 
-/**
- * @route   POST /api/notifications/send
- * @desc    Send email/SMS notification
- * @access  Private (should be protected via API Gateway / JWT)
- */
-router.post("/send", notificationController.sendNotification);
+// Send a new notification
+router.post("/send", sendNotification);
+
+// Get all notifications for a specific user (doctor/patient)
+router.get("/:receiverId", getNotifications);
 
 export default router;

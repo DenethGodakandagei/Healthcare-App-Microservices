@@ -79,6 +79,11 @@ export const telemedicineAPI = {
   sendMessage: (sessionId, data) => API.post(`/telemedicine/${sessionId}/chat`, data),
   getMessages: (sessionId) => API.get(`/telemedicine/${sessionId}/chat`),
 };
+// Notifications
+export const notificationAPI = {
+  getNotifications: (userId) => API.get(`/notifications/${userId}`),
+};
+
 
 // Payments
 export const paymentAPI = {

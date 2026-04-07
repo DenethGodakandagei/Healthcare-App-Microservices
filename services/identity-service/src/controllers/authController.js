@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
+import { sendLoginEmail } from '../../../notification-service/src/controllers/notificationController.js'; // Ensure path is correct
 
 // Generate JWT Token
 const generateToken = (id, role) => {
@@ -10,7 +11,6 @@ const generateToken = (id, role) => {
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
-// @access  Public
 export const registerUser = async (req, res) => {
   const { username, email, password, role } = req.body;
 
@@ -29,6 +29,9 @@ export const registerUser = async (req, res) => {
     });
 
     if (user) {
+      // OPTIONAL: Send a welcome email upon registration
+      sendLoginEmail(user.email, user.username);
+
       res.status(201).json({
         success: true,
         message: 'User registered successfully',
@@ -50,7 +53,6 @@ export const registerUser = async (req, res) => {
 
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
-// @access  Public
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -58,6 +60,11 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
+
+      // TRIGGER NOTIFICATION
+      // We don't use 'await' here so the user isn't stuck waiting for the email to send
+      sendLoginEmail(user.email, user.username);
+
       res.json({
         success: true,
         message: 'Login successful',
@@ -76,9 +83,9 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // @desc    Get current user profile
 // @route   GET /api/auth/me
-// @access  Private
 export const getMe = async (req, res) => {
   res.json({
     success: true,
