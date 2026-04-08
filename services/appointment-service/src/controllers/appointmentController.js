@@ -258,3 +258,26 @@ export const updateAppointmentPayment = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Delete appointment
+// @route   DELETE /api/appointments/:id
+export const deleteAppointment = async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'];
+    const userRole = req.headers['x-user-role'];
+    const appointmentId = req.params.id;
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
+
+    // Allow: doctor (own), OR admin
+    if (userRole !== 'admin' && appointment.doctorId !== userId) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    await appointment.deleteOne();
+    res.status(200).json({ success: true, message: 'Appointment removed' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
