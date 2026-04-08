@@ -83,6 +83,7 @@ export const telemedicineAPI = {
 export const notificationAPI = {
   getNotifications: (userId) => API.get(`/notifications/${userId}`),
   sendNotification: (data) => API.post('/notifications/send', data),
+  updateStatus: (id, status) => API.put(`/notifications/${id}/status`, { status }),
 };
 
 

@@ -155,6 +155,7 @@ const PatientDashboard = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
 
   const [payments, setPayments] = useState([]);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
 
   useEffect(() => {
@@ -278,6 +279,20 @@ const PatientDashboard = () => {
       alert('Failed to send message. Please try again.');
     } finally {
       setSendingMessage(false);
+    }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    setSelectedNotification(notif);
+    if (notif.status === 'PENDING') {
+      try {
+        await notificationAPI.updateStatus(notif._id, 'SEEN');
+        // Update local state
+        setNotifications(prev => prev.map(n => n._id === notif._id ? { ...n, status: 'SEEN' } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error('Failed to update notification status:', error);
+      }
     }
   };
 
@@ -630,7 +645,7 @@ const PatientDashboard = () => {
 
               {/* ---- NOTIFICATIONS ---- */}
               {activeTab === 'notifications' && (
-                <NotificationsTab notifications={notifications} />
+                <NotificationsTab notifications={notifications} onNotificationClick={handleNotificationClick} />
               )}
 
               {/* ---- PROFILE ---- */}
@@ -806,13 +821,62 @@ const PatientDashboard = () => {
           </div>
         </div>
       )}
+      {/* Notification Detail Modal */}
+      {selectedNotification && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="p-8 pb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Notification</h3>
+                <p className="text-gray-400 text-xs font-medium uppercase tracking-widest mt-1">Details & Information</p>
+              </div>
+              <button onClick={() => setSelectedNotification(null)} className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors">
+                <Icon path={icons.x} size={20} />
+              </button>
+            </div>
+            
+            <div className="p-8 pt-4 space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-sky-50/50 rounded-2xl border border-sky-100">
+                <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center ${
+                  selectedNotification.type === 'chat' ? 'bg-sky-100 text-sky-600' : 
+                  selectedNotification.type === 'security' ? 'bg-red-100 text-red-600' : 
+                  'bg-emerald-100 text-emerald-600'
+                }`}>
+                  {selectedNotification.type === 'chat' ? <Icon path={icons.menu} size={24} /> :
+                   selectedNotification.type === 'security' ? <Icon path={icons.shield} size={24} /> :
+                   <Icon path={icons.bell} size={24} />}
+                </div>
+                <div>
+                  <p className="text-gray-900 font-bold capitalize">{selectedNotification.type} Alert</p>
+                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-wider">
+                    {new Date(selectedNotification.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                <p className="text-gray-700 text-sm leading-relaxed font-medium">
+                  {selectedNotification.message}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setSelectedNotification(null)}
+                className="w-full h-14 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all active:scale-[0.98] shadow-xl shadow-gray-200"
+              >
+                Close Window
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 
 /* ─── Notifications Tab ────────────────────────────────────────── */
-const NotificationsTab = ({ notifications }) => {
+const NotificationsTab = ({ notifications, onNotificationClick }) => {
   const getIcon = (type) => {
     switch (type) {
       case 'chat': return <Icon path={icons.menu} size={18} />;
@@ -845,12 +909,13 @@ const NotificationsTab = ({ notifications }) => {
           {notifications.map((notif) => (
             <div 
               key={notif._id} 
-              className={`bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition-all group ${notif.status === 'PENDING' ? 'border-sky-100 bg-sky-50/10' : ''}`}
+              onClick={() => onNotificationClick(notif)}
+              className={`bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition-all group cursor-pointer ${notif.status === 'PENDING' ? 'border-sky-100 bg-sky-50/10' : ''}`}
             >
               <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center ${
                 notif.type === 'chat' ? 'bg-sky-50 text-sky-500' : 
                 notif.type === 'email' ? 'bg-emerald-50 text-emerald-500' : 
-                'bg-purple-50 text-purple-500'
+                'bg-red-50 text-red-500'
               }`}>
                 {getIcon(notif.type)}
               </div>
