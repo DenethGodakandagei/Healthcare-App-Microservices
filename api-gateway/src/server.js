@@ -71,5 +71,10 @@ app.use('/api/telemedicine', createProxyMiddleware({
   changeOrigin: true
 }));
 
+app.use('/api/notifications', createProxyMiddleware({
+  target: (process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:4005') + '/api/notifications',
+  changeOrigin: true
+}));
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`API Gateway listening on port ${PORT}`));

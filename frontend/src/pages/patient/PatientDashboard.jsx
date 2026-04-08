@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-
-import { useNavigate } from 'react-router-dom';
-import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, telemedicineAPI, notificationAPI } from '../../services/api';
-
 import { useNavigate, Link } from 'react-router-dom';
-import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, telemedicineAPI, paymentAPI } from '../../services/api';
+import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, notificationAPI, paymentAPI } from '../../services/api';
 import doc1 from '../../assets/doc1.png';
 import doc2 from '../../assets/doc2.png';
 import doc3 from '../../assets/doc3.png';
@@ -208,11 +204,11 @@ const PatientDashboard = () => {
           }
         } catch (err) {
           console.error('Failed to fetch notifications:', err);
+        }
 
         // Load payments
         if (paymentsRes.status === 'fulfilled') {
           setPayments(paymentsRes.value?.data?.data || []);
-
         }
 
         setAppointments(patientAppointments);
@@ -266,22 +262,19 @@ const PatientDashboard = () => {
     if (!messageDoctor || !messageText.trim()) return;
     setSendingMessage(true);
     try {
-      // 1. Access/Create Chat
-      const chatRes = await chatAPI.accessChat(messageDoctor.userId || messageDoctor._id);
-      const chat = chatRes.data;
-
-      // 2. Send the first message
-      await messageAPI.sendMessage({
-        chatId: chat._id,
-        content: messageText
+      // Send notification/message to doctor via notificationAPI
+      await notificationAPI.sendNotification({
+        receiverId: messageDoctor.userId || messageDoctor._id,
+        senderId: user?.id || user?._id,
+        type: 'chat',
+        message: messageText,
       });
 
-      // 3. Clear and Navigate
+      // Clear modal state
       setMessageDoctor(null);
       setMessageText('');
-      navigate(`/chat/${chat._id}`);
     } catch (error) {
-      console.error('Failed to start chat:', error);
+      console.error('Failed to send message:', error);
       alert('Failed to send message. Please try again.');
     } finally {
       setSendingMessage(false);
@@ -822,9 +815,10 @@ const PatientDashboard = () => {
 const NotificationsTab = ({ notifications }) => {
   const getIcon = (type) => {
     switch (type) {
-      case 'chat': return <Icon path={icons.menu} size={18} />; // Replace with a chat icon if available
-      case 'email': return <Icon path={icons.pill} size={18} />; // Generic icon
-      case 'sms': return <Icon path={icons.user} size={18} />; // Generic icon
+      case 'chat': return <Icon path={icons.menu} size={18} />;
+      case 'security': return <Icon path={icons.shield} size={18} />;
+      case 'email': return <Icon path={icons.pill} size={18} />;
+      case 'sms': return <Icon path={icons.user} size={18} />;
       default: return <Icon path={icons.bell} size={18} />;
     }
   };
@@ -1428,4 +1422,3 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
   );
 };
 
-export default PatientDashboard;
