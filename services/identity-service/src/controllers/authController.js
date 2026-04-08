@@ -1,6 +1,19 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import { sendLoginEmail } from '../../../notification-service/src/controllers/notificationController.js'; // Ensure path is correct
+
+// Local helper to call notification-service via HTTP (avoids direct DB access issues)
+const sendLoginNotification = async (email, username, userId, role) => {
+  try {
+    // Call the notification-service API directly (Port 4005)
+    await fetch('http://localhost:4005/api/notifications/login-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, username, userId, role })
+    });
+  } catch (error) {
+    console.error('Failed to trigger login notification via API:', error.message);
+  }
+};
 
 // Generate JWT Token
 const generateToken = (id, role) => {
@@ -30,7 +43,7 @@ export const registerUser = async (req, res) => {
 
     if (user) {
       // OPTIONAL: Send a welcome email upon registration
-      sendLoginEmail(user.email, user.username);
+      sendLoginNotification(user.email, user.username, user._id, user.role);
 
       res.status(201).json({
         success: true,
@@ -63,7 +76,7 @@ export const loginUser = async (req, res) => {
 
       // TRIGGER NOTIFICATION
       // We don't use 'await' here so the user isn't stuck waiting for the email to send
-      sendLoginEmail(user.email, user.username);
+      sendLoginNotification(user.email, user.username, user._id, user.role);
 
       res.json({
         success: true,
