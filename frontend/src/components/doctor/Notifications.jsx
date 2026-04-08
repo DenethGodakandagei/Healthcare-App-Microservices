@@ -13,6 +13,7 @@ const icons = {
     message: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></>,
     check: <><polyline points="20 6 9 17 4 12" /></>,
     clock: <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>,
+    shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></>,
 };
 
 const Notifications = () => {
@@ -77,11 +78,12 @@ const Notifications = () => {
                             <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50/50 rounded-bl-[4rem] -mr-8 -mt-8 transition-transform group-hover:scale-110 duration-700" />
                             
                             <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center relative z-10 shadow-sm ${
-                                notif.type === 'chat' || notif.type === 'chat' ? 'bg-sky-500 text-white shadow-sky-500/20' : 
+                                notif.type === 'chat' ? 'bg-sky-500 text-white shadow-sky-500/20' : 
+                                notif.type === 'security' ? 'bg-red-500 text-white shadow-red-500/20' :
                                 notif.type === 'email' ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 
                                 'bg-purple-500 text-white shadow-purple-500/20'
                             }`}>
-                                <Icon path={notif.type === 'chat' ? icons.message : icons.bell} size={24} />
+                                <Icon path={notif.type === 'chat' ? icons.message : notif.type === 'security' ? icons.shield : icons.bell} size={24} />
                             </div>
 
                             <div className="flex-1 min-w-0 relative z-10 py-1">
