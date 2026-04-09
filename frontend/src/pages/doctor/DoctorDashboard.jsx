@@ -212,7 +212,7 @@ const DoctorDashboard = () => {
             </div>
           ) : (
             <div className="animate-in fade-in duration-500">
-              <Outlet context={{ user, appointments, profile, pending, confirmed }} />
+              <Outlet context={{ user, appointments, setAppointments, profile, pending, confirmed }} />
             </div>
           )}
         </main>
