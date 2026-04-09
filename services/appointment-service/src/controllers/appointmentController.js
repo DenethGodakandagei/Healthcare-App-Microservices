@@ -188,17 +188,36 @@ export const getAppointmentById = async (req, res) => {
   }
 };
 
+// @desc    Get all appointments (Admin)
+// @route   GET /api/appointments
+// @access  Private (Admin)
+export const getAllAppointments = async (req, res) => {
+  try {
+    const userRole = req.headers['x-user-role'];
+    if (userRole !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized. Admin access required.' });
+    }
+
+    const appointments = await Appointment.find({}).populate('sessionId').sort({ date: 1 });
+    res.status(200).json({ success: true, count: appointments.length, data: appointments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Update appointment status
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const userId = req.headers['x-user-id'];
+    const userRole = req.headers['x-user-role'];
     const { status, notes, reasonForVisit } = req.body;
     const appointmentId = req.params.id;
 
     let appointment = await Appointment.findById(appointmentId);
     if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
 
-    if (appointment.patientId !== userId && appointment.doctorId !== userId) {
+    // Allow: patient (own), doctor (own), OR admin
+    if (userRole !== 'admin' && appointment.patientId !== userId && appointment.doctorId !== userId) {
       return res.status(403).json({ success: false, message: 'Forbidden' });
     }
 
@@ -217,17 +236,47 @@ export const updateAppointmentStatus = async (req, res) => {
 // @desc    Update appointment payment status
 export const updateAppointmentPayment = async (req, res) => {
   try {
+    const userId = req.headers['x-user-id'];
+    const userRole = req.headers['x-user-role'];
     const { paymentStatus, paymentId } = req.body;
     const appointmentId = req.params.id;
 
     let appointment = await Appointment.findById(appointmentId);
     if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
 
+    // Allow: admin, or the patient/doctor associated with the appointment
+    if (userRole !== 'admin' && appointment.patientId !== userId && appointment.doctorId !== userId) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
     if (paymentStatus) appointment.paymentStatus = paymentStatus;
     if (paymentId) appointment.paymentId = paymentId;
 
     await appointment.save();
     res.status(200).json({ success: true, data: appointment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete appointment
+// @route   DELETE /api/appointments/:id
+export const deleteAppointment = async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'];
+    const userRole = req.headers['x-user-role'];
+    const appointmentId = req.params.id;
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
+
+    // Allow: doctor (own), OR admin
+    if (userRole !== 'admin' && appointment.doctorId !== userId) {
+      return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+
+    await appointment.deleteOne();
+    res.status(200).json({ success: true, message: 'Appointment removed' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -4,13 +4,15 @@ import {
   getPatientAppointments,
   getDoctorAppointments,
   getAppointmentById,
+  getAllAppointments,
   updateAppointmentStatus,
   createSession,
   getSessions,
   getSessionById,
   updateSession,
   deleteSession,
-  updateAppointmentPayment
+  updateAppointmentPayment,
+  deleteAppointment
 } from '../controllers/appointmentController.js';
 
 const router = express.Router();
@@ -27,6 +29,7 @@ router.route('/sessions/:id')
 
 // Appointment Routes
 router.route('/')
+  .get(getAllAppointments)
   .post(bookAppointment);
 
 router.route('/patient')
@@ -36,7 +39,8 @@ router.route('/doctor')
   .get(getDoctorAppointments);
 
 router.route('/:id')
-  .get(getAppointmentById);
+  .get(getAppointmentById)
+  .delete(deleteAppointment);
 
 router.route('/:id/status')
   .put(updateAppointmentStatus);

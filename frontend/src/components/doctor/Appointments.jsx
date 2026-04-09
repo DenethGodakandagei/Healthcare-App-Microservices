@@ -3,11 +3,23 @@ import { useOutletContext, useLocation } from 'react-router-dom';
 import AppointmentCard from './AppointmentCard';
 
 const Appointments = () => {
-  const { appointments } = useOutletContext();
+  const { appointments, setAppointments } = useOutletContext();
   const location = useLocation();
 
   // Determine if we should only show online or physical based on path
   const onlyType = location.pathname.includes('physical') ? 'physical' : 'online';
+
+  const handleRemove = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this appointment record?')) return;
+    try {
+      const { appointmentAPI } = await import('../../services/api');
+      await appointmentAPI.delete(id);
+      setAppointments(prev => prev.filter(a => a._id !== id));
+    } catch (err) {
+      console.error('Failed to remove appointment:', err);
+      alert('Failed to remove appointment record.');
+    }
+  };
 
   const groups = useMemo(() => {
     const list = appointments || [];
@@ -68,7 +80,7 @@ const Appointments = () => {
               <h3 className="text-gray-900 font-bold uppercase tracking-widest text-[10px]">Action Required</h3>
             </div>
             <div className="grid grid-cols-1 gap-3">
-              {groups.pending.map(apt => <AppointmentCard key={apt._id} apt={apt} />)}
+              {groups.pending.map(apt => <AppointmentCard key={apt._id} apt={apt} onRemove={handleRemove} />)}
             </div>
           </div>
         )}
@@ -83,7 +95,7 @@ const Appointments = () => {
             <div className="p-8 border-2 border-dashed border-gray-100 rounded-2xl text-center text-gray-300 text-[10px] font-bold uppercase tracking-widest">No previous history in this category</div>
           ) : (
             <div className="grid grid-cols-1 gap-3">
-              {groups.all.filter(a => a.status !== 'pending').map(apt => <AppointmentCard key={apt._id} apt={apt} />)}
+              {groups.all.filter(a => a.status !== 'pending').map(apt => <AppointmentCard key={apt._id} apt={apt} onRemove={handleRemove} />)}
             </div>
           )}
         </div>

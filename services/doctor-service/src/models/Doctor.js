@@ -23,8 +23,7 @@ const doctorSchema = new mongoose.Schema({
     required: true
   },
   contactNumber: {
-    type: String,
-    required: true
+    type: String
   },
   consultationFee: {
     type: Number,

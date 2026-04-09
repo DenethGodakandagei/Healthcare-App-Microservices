@@ -1,16 +1,29 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 
+// Local helper to call notification-service via HTTP (avoids direct DB access issues)
+const sendLoginNotification = async (email, username, userId, role) => {
+  try {
+    // Call the notification-service API directly (Port 4005)
+    await fetch('http://localhost:4005/api/notifications/login-alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, username, userId, role })
+    });
+  } catch (error) {
+    console.error('Failed to trigger login notification via API:', error.message);
+  }
+};
+
 // Generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret', {
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'secret', {
     expiresIn: '30d',
   });
 };
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
-// @access  Public
 export const registerUser = async (req, res) => {
   const { username, email, password, role } = req.body;
 
@@ -29,6 +42,9 @@ export const registerUser = async (req, res) => {
     });
 
     if (user) {
+      // OPTIONAL: Send a welcome email upon registration
+      sendLoginNotification(user.email, user.username, user._id, user.role);
+
       res.status(201).json({
         success: true,
         message: 'User registered successfully',
@@ -37,7 +53,7 @@ export const registerUser = async (req, res) => {
           username: user.username,
           email: user.email,
           role: user.role,
-          token: generateToken(user._id),
+          token: generateToken(user._id, user.role),
         }
       });
     } else {
@@ -50,7 +66,6 @@ export const registerUser = async (req, res) => {
 
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
-// @access  Public
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -58,6 +73,11 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
+
+      // TRIGGER NOTIFICATION
+      // We don't use 'await' here so the user isn't stuck waiting for the email to send
+      sendLoginNotification(user.email, user.username, user._id, user.role);
+
       res.json({
         success: true,
         message: 'Login successful',
@@ -66,7 +86,7 @@ export const loginUser = async (req, res) => {
           username: user.username,
           email: user.email,
           role: user.role,
-          token: generateToken(user._id),
+          token: generateToken(user._id, user.role),
         }
       });
     } else {
@@ -76,9 +96,9 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // @desc    Get current user profile
 // @route   GET /api/auth/me
-// @access  Private
 export const getMe = async (req, res) => {
   res.json({
     success: true,

@@ -2,13 +2,11 @@ import mongoose from "mongoose";
 
 const NotificationSchema = new mongoose.Schema(
     {
-        email: {
+        senderId: String,
+        receiverId: String,
+        role: {
             type: String,
-            required: false
-        },
-        phone: {
-            type: String,
-            required: false
+            enum: ["patient", "doctor"]
         },
         message: {
             type: String,
@@ -16,8 +14,8 @@ const NotificationSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["EMAIL", "SMS", "BOTH"],
-            default: "BOTH"
+            enum: ["chat", "email", "sms", "security"],
+            default: "chat"
         },
         status: {
             type: String,

@@ -13,7 +13,9 @@ import Overview from './components/doctor/Overview';
 import Appointments from './components/doctor/Appointments';
 import Availability from './components/doctor/Availability';
 import Credentials from './components/doctor/Credentials';
+import Notifications from './components/doctor/Notifications';
 import VideoCallPage from './pages/VideoCallPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 function App() {
   return (
@@ -52,6 +54,7 @@ function App() {
             <Route path="physical" element={<Appointments />} />
             <Route path="availability" element={<Availability />} />
             <Route path="credentials" element={<Credentials />} />
+            <Route path="notifications" element={<Notifications />} />
           </Route>
 
           {/* Video Call (protected - both doctor and patient) */}
@@ -60,6 +63,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <VideoCallPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin protected route */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRole="admin">
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

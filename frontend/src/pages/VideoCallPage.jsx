@@ -164,8 +164,11 @@ const VideoCallPage = () => {
     setError('');
 
     try {
-      // Dynamically import Agora SDK
-      const AgoraRTC = (await import('agora-rtc-sdk-ng')).default;
+      // Agora SDK is loaded globally via CDN script in index.html
+      const AgoraRTC = window.AgoraRTC;
+      if (!AgoraRTC) {
+        throw new Error('Agora SDK not loaded. Please check your internet connection.');
+      }
 
       // Get token from backend
       const tokenRes = await telemedicineAPI.generateToken({

@@ -12,10 +12,14 @@ const icons = {
   user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
   message: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></>,
   send: <><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></>,
+  trash: <><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></>,
+  info: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></>,
+  x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
 };
 
-const AppointmentCard = ({ apt, onAccept, onComplete }) => {
+const AppointmentCard = ({ apt, onAccept, onComplete, onRemove }) => {
   const [showModal, setShowModal] = useState(false);
+  const [showPatientDetails, setShowPatientDetails] = useState(false);
   const [msgInput, setMsgInput] = useState(apt.notes || '');
   const [isSending, setIsSending] = useState(false);
 
@@ -71,6 +75,27 @@ const AppointmentCard = ({ apt, onAccept, onComplete }) => {
         {status === 'confirmed' && (
           <button onClick={() => onComplete && onComplete(apt._id)} className="flex-1 md:flex-none h-11 px-6 border-2 border-emerald-500 text-emerald-600 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-emerald-50 active:scale-95 transition-all">Complete</button>
         )}
+        
+        {/* Remove button visible for cancelled appointments */}
+        {status === 'cancelled' && (
+          <button 
+            onClick={() => onRemove && onRemove(apt._id)}
+            className="flex-1 md:flex-none h-11 px-6 bg-red-50 text-red-600 border border-red-100 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-red-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <Icon path={icons.trash} size={14} />
+            Remove Record
+          </button>
+        )}
+
+        {/* View Patient Details Button */}
+        <button 
+          onClick={() => setShowPatientDetails(true)}
+          className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#0EA5E9] hover:border-[#0EA5E9] transition-all bg-white"
+          title="View Patient Details"
+        >
+          <Icon path={icons.info} size={16} />
+        </button>
+
         <button 
           onClick={() => setShowModal(true)}
           className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#2299C9] hover:border-[#2299C9] transition-all bg-white"
@@ -79,9 +104,98 @@ const AppointmentCard = ({ apt, onAccept, onComplete }) => {
           <Icon path={icons.message} size={16} />
         </button>
 
+        {/* Patient Details Modal */}
+        {showPatientDetails && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+              {/* Modal Header */}
+              <div className="relative h-32 bg-gradient-to-r from-sky-400 to-[#2299C9] p-8">
+                <button 
+                  onClick={() => setShowPatientDetails(false)}
+                  className="absolute top-6 right-6 w-10 h-10 rounded-2xl bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all border border-white/20"
+                >
+                  <Icon path={icons.x} size={20} />
+                </button>
+                <div className="flex items-center gap-5 mt-4">
+                  <div className="w-20 h-20 rounded-3xl bg-white p-1 shadow-xl">
+                    <div className="w-full h-full bg-sky-50 rounded-2xl flex items-center justify-center text-[#2299C9] text-3xl font-black">
+                      {(apt.patientName || 'P')[0]}
+                    </div>
+                  </div>
+                  <div className="text-white">
+                    <h3 className="text-2xl font-black tracking-tight leading-none">{apt.patientName || 'Anonymous Patient'}</h3>
+                    <p className="text-sky-100 text-xs font-bold uppercase tracking-widest mt-2 bg-white/10 px-2 py-0.5 rounded inline-block">Ref: {apt.appointmentNumber}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-8 pt-12 space-y-8">
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Contact Number</p>
+                    <p className="text-gray-900 font-bold text-sm">{apt.patientPhone || 'No contact provided'}</p>
+                  </div>
+                  <div className="space-y-1 text-right">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">ID/NIC Number</p>
+                    <p className="text-gray-900 font-bold text-sm tracking-widest">{apt.patientNIC || '—'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Appointment Date</p>
+                    <p className="text-gray-900 font-bold text-sm">{date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                  </div>
+                  <div className="space-y-1 text-right">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Scheduled Slot</p>
+                    <p className="text-gray-900 font-bold text-sm capitalize">{apt.startTime} – {apt.endTime}</p>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                    <Icon path={icons.message} size={10} className="text-[#2299C9]" />
+                    Reason for Consultation
+                  </p>
+                  <p className="text-gray-700 text-sm font-medium leading-relaxed italic">
+                    "{apt.reasonForVisit || 'No specific reason entered by patient.'}"
+                  </p>
+                </div>
+
+                {apt.notes && (
+                   <div className="bg-sky-50/50 rounded-3xl p-6 border border-sky-100">
+                    <p className="text-[10px] font-black text-[#2299C9] uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                      <Icon path={icons.send} size={10} />
+                      Clinical Notes / Previous Updates
+                    </p>
+                    <p className="text-[#1C82AB] text-sm font-bold leading-relaxed">
+                      {apt.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-8 pb-8 flex gap-3">
+                <button 
+                  onClick={() => setShowPatientDetails(false)}
+                  className="flex-1 h-14 bg-gray-50 text-gray-600 rounded-[1.25rem] font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-all border border-gray-100"
+                >
+                  Close Records
+                </button>
+                <button 
+                  onClick={() => { setShowPatientDetails(false); setShowModal(true); }}
+                  className="flex-[1.5] h-14 bg-gray-900 text-white rounded-[1.25rem] font-black text-xs uppercase tracking-widest hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 flex items-center justify-center gap-3"
+                >
+                  <Icon path={icons.message} size={14} />
+                  Contact Patient
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Messaging Modal */}
         {showModal && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl animate-in zoom-in-95 duration-300 border border-gray-100">
                <div className="flex items-center justify-between mb-6">
                   <div>
@@ -89,7 +203,7 @@ const AppointmentCard = ({ apt, onAccept, onComplete }) => {
                     <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-1">Medical Update: {apt.patientName || apt.patient?.username || 'Patient'}</p>
                   </div>
                   <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-900 transition-all">
-                     <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <Icon path={icons.x} size={18} />
                   </button>
                </div>
 
@@ -134,18 +248,9 @@ const AppointmentCard = ({ apt, onAccept, onComplete }) => {
                     </button>
                   </div>
                </div>
-
-               <div className="mt-8 pt-6 border-t border-gray-50">
-                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] leading-relaxed">
-                    This message will be instantly visible on the patient's dashboard as a clinical update.
-                  </p>
-               </div>
             </div>
           </div>
         )}
-        <button className="w-10 h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#0EA5E9] hover:border-[#0EA5E9] transition-all bg-white">
-          <Icon path={icons.user} size={16} />
-        </button>
       </div>
     </div>
   );
