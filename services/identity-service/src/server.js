@@ -1,7 +1,11 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+console.log('Identity Service MONGO_URI loaded:', process.env.MONGO_URI ? 'YES' : 'NO');
+
 import express from 'express';
 import cors from 'cors';
 import connectDB from './config/db.js';
-import 'dotenv/config';
 import authRoutes from './routes/auth.js';
 
 // Connect to MongoDB
