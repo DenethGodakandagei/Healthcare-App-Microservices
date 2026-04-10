@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, notificationAPI, paymentAPI } from '../../services/api';
+import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, notificationAPI, paymentAPI, symptomAPI } from '../../services/api';
 import doc1 from '../../assets/doc1.png';
 import doc2 from '../../assets/doc2.png';
 import doc3 from '../../assets/doc3.png';
@@ -44,6 +44,7 @@ const icons = {
   chevronRight: <><polyline points="9 18 15 12 9 6" /></>,
   creditCard: <><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></>,
   download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
+  sparkles: <><path d="M12 3l1.912 5.813L21 12l-7.088 3.187L12 21l-1.912-5.813L3 12l7.088-3.187L12 3z" /></>,
 };
 
 const StatCard = ({ label, value, sub, icon }) => (
@@ -398,7 +399,7 @@ const PatientDashboard = () => {
     { id: 'notifications', label: 'Notifications', icon: 'bell' },
 
     { id: 'payments', label: 'Payments', icon: 'creditCard' },
-
+    { id: 'ai-symptoms', label: 'AI Symptom Checker', icon: 'sparkles' },
     { id: 'profile', label: 'My Profile', icon: 'user' },
   ];
 
@@ -648,6 +649,11 @@ const PatientDashboard = () => {
                 <NotificationsTab notifications={notifications} onNotificationClick={handleNotificationClick} />
               )}
 
+              {/* ---- AI SYMPTOM CHECKER ---- */}
+              {activeTab === 'ai-symptoms' && (
+                <SymptomCheckerTab user={user} />
+              )}
+
               {/* ---- PROFILE ---- */}
               {activeTab === 'profile' && (
                 <div className="max-w-lg space-y-5">
@@ -804,23 +810,14 @@ const PatientDashboard = () => {
                 </select>
               </div>
             </div>
-            <div className="p-4 border-t border-gray-100 flex gap-3">
-              <button
-                onClick={() => { setShowEditModal(false); setEditAppointment(null); }}
-                className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-              >
-                Save
-              </button>
+            <div className="p-4 border-t border-gray-100 flex justify-end gap-2">
+              <button onClick={() => { setShowEditModal(false); setEditAppointment(null); }} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Cancel</button>
+              <button onClick={handleSaveEdit} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">Save Changes</button>
             </div>
           </div>
         </div>
       )}
+
       {/* Notification Detail Modal */}
       {selectedNotification && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -873,6 +870,118 @@ const PatientDashboard = () => {
     </div>
   );
 };
+
+/* ─── AI Symptom Checker Tab ─────────────────────────────────────── */
+const SymptomCheckerTab = ({ user }) => {
+  const [symptoms, setSymptoms] = useState('');
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleAnalyze = async () => {
+    if (!symptoms.trim()) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await symptomAPI.analyze({ 
+        symptoms, 
+        patientId: user?.id || user?._id 
+      });
+      setResult(res.data?.data || res.data);
+    } catch (err) {
+      console.error("Analysis failed:", err);
+      setError("AI analysis failed. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-4xl">
+      <div>
+        <h2 className="text-gray-900 text-xl font-bold flex items-center gap-2">
+          <div className="text-[#0EA5E9] animate-pulse"><Icon path={icons.sparkles} size={20} /></div>
+          AI Symptom Checker
+        </h2>
+        <p className="text-gray-500 text-sm mt-0.5">Describe how you're feeling and let our AI assistant provide preliminary guidance.</p>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-[2rem] p-8 shadow-sm">
+        <div className="space-y-6">
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Describe your symptoms</label>
+            <textarea
+              value={symptoms}
+              onChange={(e) => setSymptoms(e.target.value)}
+              placeholder="Example: I have a persistent headache and feel slightly dizzy for the past two days..."
+              className="w-full p-6 bg-gray-50 border border-gray-100 rounded-[1.5rem] text-sm focus:ring-4 focus:ring-sky-500/10 focus:border-[#2299C9] outline-none transition-all resize-none font-medium text-gray-700 min-h-[160px]"
+            />
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
+              <Icon path={<><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>} size={12} />
+              Not a medical diagnosis. Consult a doctor for professional advice.
+            </div>
+            <button
+              onClick={handleAnalyze}
+              disabled={loading || !symptoms.trim()}
+              className="h-14 px-8 bg-[#2299C9] text-white rounded-2xl font-bold hover:bg-[#1C82AB] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-3 shadow-xl shadow-sky-500/20"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Icon path={icons.sparkles} size={18} />
+                  Analyze Symptoms
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-100 p-4 rounded-2xl text-red-600 text-sm font-medium flex items-center gap-3">
+          <Icon path={icons.x} size={16} />
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <div className="bg-white border border-gray-200 rounded-[2rem] p-8 shadow-md animate-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-sky-50 rounded-bl-[5rem] -mr-8 -mt-8 opacity-50" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-[#2299C9] rounded-xl flex items-center justify-center text-white shadow-lg shadow-sky-200">
+                <Icon path={icons.activity} size={18} />
+              </div>
+              <h3 className="text-gray-900 font-bold text-lg">Analysis Result</h3>
+            </div>
+
+            <div className="prose prose-sm max-w-none text-gray-700 font-medium leading-relaxed whitespace-pre-wrap">
+              {result}
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-gray-100 flex items-center justify-between">
+              <div className="text-gray-400 text-xs italic">
+                Processed by BioGrid AI Assistant
+              </div>
+              <button 
+                onClick={() => { setSymptoms(''); setResult(''); }}
+                className="text-xs font-black uppercase tracking-widest text-[#2299C9] hover:text-[#1C82AB] transition-colors"
+              >
+                Clear Results
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 
 /* ─── Notifications Tab ────────────────────────────────────────── */

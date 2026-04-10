@@ -86,6 +86,11 @@ export const notificationAPI = {
   updateStatus: (id, status) => API.put(`/notifications/${id}/status`, { status }),
 };
 
+// AI Symptom Checker
+export const symptomAPI = {
+  analyze: (data) => API.post('/ai/symptoms/analyze', data),
+};
+
 
 // Payments
 export const paymentAPI = {

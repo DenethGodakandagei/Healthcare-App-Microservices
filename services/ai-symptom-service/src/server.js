@@ -1,23 +1,13 @@
-import express from 'express';
-import cors from 'cors';
-import 'dotenv/config';
+import dotenv from "dotenv";
+import app from "./app.js";
+import connectDB from "./config/db.js";
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+dotenv.config();
 
-// Request logger middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} request received at ${req.url}`);
-  next();
-});
+connectDB();
 
-// AI Symptom Checker Service health check
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', service: 'AI Symptom Checker Service' });
-});
+const PORT = process.env.PORT || 5005;
 
-const PORT = process.env.PORT || 4001;
 app.listen(PORT, () => {
-  console.log(`AI Symptom Checker Service listening on port ${PORT}`);
+    console.log(`AI Symptom Server running on port ${PORT}`);
 });
