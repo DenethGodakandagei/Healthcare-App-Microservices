@@ -14,7 +14,7 @@ const NotificationSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["chat", "email", "sms", "security"],
+            enum: ["chat", "email", "sms", "security", "appointment"],
             default: "chat"
         },
         status: {

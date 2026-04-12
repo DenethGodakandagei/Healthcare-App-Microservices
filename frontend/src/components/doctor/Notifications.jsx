@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { notificationAPI } from '../../services/api';
+import ConfirmDeleteModal from '../ConfirmDeleteModal';
 
 const Icon = ({ path, size = 18, className = '' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -14,6 +15,7 @@ const icons = {
     check: <><polyline points="20 6 9 17 4 12" /></>,
     clock: <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>,
     shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></>,
+    x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
 };
 
 const Notifications = () => {
@@ -21,6 +23,7 @@ const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedNotification, setSelectedNotification] = useState(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
     const handleNotificationClick = async (notif) => {
         setSelectedNotification(notif);
@@ -32,6 +35,22 @@ const Notifications = () => {
                 console.error('Failed to update notification status:', error);
             }
         }
+    };
+
+    const handleNotificationDeleteRequest = (event, notifId) => {
+        event.stopPropagation();
+        setDeleteConfirmId(notifId);
+    };
+
+    const confirmNotificationDelete = async () => {
+        if (!deleteConfirmId) return;
+        try {
+            await notificationAPI.delete(deleteConfirmId);
+            setNotifications(prev => prev.filter(n => n._id !== deleteConfirmId));
+        } catch (error) {
+            console.error('Failed to delete notification:', error);
+        }
+        setDeleteConfirmId(null);
     };
 
     useEffect(() => {
@@ -120,6 +139,13 @@ const Notifications = () => {
                                                 New Alert
                                             </span>
                                         )}
+                                        <button 
+                                            onClick={(e) => handleNotificationDeleteRequest(e, notif._id)}
+                                            className="ml-4 text-gray-400 hover:text-red-500 transition-colors p-1"
+                                            title="Delete Notification"
+                                        >
+                                            <Icon path={icons.x} size={14} />
+                                        </button>
                                     </div>
                                     <p className="text-gray-800 text-base font-semibold leading-relaxed group-hover:text-gray-900 transition-colors">
                                         {notif.message}
@@ -177,6 +203,15 @@ const Notifications = () => {
                     </div>
                 </div>
             )}
+            <ConfirmDeleteModal 
+                open={!!deleteConfirmId} 
+                onConfirm={confirmNotificationDelete} 
+                onCancel={() => setDeleteConfirmId(null)}
+                title="Delete Notification?"
+                message="This will permanently delete this notification from your feed."
+                confirmText="Delete"
+                cancelText="Cancel"
+            />
         </>
     );
 };

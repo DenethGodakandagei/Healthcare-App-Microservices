@@ -110,7 +110,7 @@ export const bookAppointment = async (req, res) => {
     const patientId = req.headers['x-user-id'];
     if (!patientId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    const { sessionId, reasonForVisit, patientName, patientNIC, patientPhone, appointmentType, paymentStatus, paymentId } = req.body;
+    const { sessionId, reasonForVisit, patientName, patientNIC, patientPhone, appointmentType, paymentStatus, paymentId, patientEmail, doctorName } = req.body;
 
     const session = await Session.findById(sessionId);
     if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
@@ -147,6 +147,31 @@ export const bookAppointment = async (req, res) => {
       paymentStatus: paymentStatus || 'pending',
       paymentId: paymentId || 'PENDING'
     });
+
+    // Notify user asynchronously via notification-service API
+    if (patientEmail) {
+      try {
+        fetch('http://localhost:4005/api/notifications/appointment-alert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: patientEmail,
+            patientName: patientName || 'Patient',
+            appointmentNumber,
+            date: session.date,
+            startTime: session.startTime,
+            appointmentType: appointmentType || 'physical',
+            patientId,
+            doctorId: session.doctorId,
+            doctorName
+          })
+        }).catch(err => {
+          console.error('Failed to trigger appointment notification via API:', err.message);
+        });
+      } catch (error) {
+        console.error('Failed to initiate fetch for appointment notification:', error.message);
+      }
+    }
 
     res.status(201).json({ success: true, data: appointment });
   } catch (error) {
