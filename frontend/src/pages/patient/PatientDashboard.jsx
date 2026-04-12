@@ -259,7 +259,7 @@ const PatientDashboard = () => {
       console.error('Update failed:', error);
     }
   };
-  
+
   const handleSendMessage = async () => {
     if (!messageDoctor || !messageText.trim()) return;
     setSendingMessage(true);
@@ -488,7 +488,7 @@ const PatientDashboard = () => {
             </h1>
             <p className="text-gray-400 text-xs mt-0.5">Patient Portal</p>
           </div>
-          <button 
+          <button
             onClick={() => setActiveTab('notifications')}
             className={`relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100 ${activeTab === 'notifications' ? 'bg-sky-50 text-[#0EA5E9]' : ''}`}
           >
@@ -714,7 +714,7 @@ const PatientDashboard = () => {
       {/* Modals */}
       <AppointmentBookingWizard open={showBookingModal} onClose={() => setShowBookingModal(false)} />
       <ConfirmDeleteModal open={!!deleteConfirmId} onConfirm={confirmCancel} onCancel={() => setDeleteConfirmId(null)} />
-      
+
       {/* Send Message Modal */}
       {messageDoctor && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -728,7 +728,7 @@ const PatientDashboard = () => {
                 <Icon path={icons.x} size={20} />
               </button>
             </div>
-            
+
             <div className="p-8 pt-4 space-y-6">
               <div className="flex items-center gap-4 p-4 bg-sky-50/50 rounded-2xl border border-sky-100">
                 <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm">
@@ -1018,13 +1018,12 @@ const NotificationsTab = ({ notifications, onNotificationClick }) => {
           {notifications.map((notif) => (
             <div 
               key={notif._id} 
-              onClick={() => onNotificationClick(notif)}
-              className={`bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition-all group cursor-pointer ${notif.status === 'PENDING' ? 'border-sky-100 bg-sky-50/10' : ''}`}
+              className={`bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-md transition-all group ${notif.status === 'PENDING' ? 'border-sky-100 bg-sky-50/10' : ''}`}
             >
               <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center ${
                 notif.type === 'chat' ? 'bg-sky-50 text-sky-500' : 
                 notif.type === 'email' ? 'bg-emerald-50 text-emerald-500' : 
-                'bg-red-50 text-red-500'
+                'bg-purple-50 text-purple-500'
               }`}>
                 {getIcon(notif.type)}
               </div>
@@ -1071,6 +1070,7 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
   const [patientNIC, setPatientNIC] = useState('');
   const [patientPhone, setPatientPhone] = useState('');
   const [reason, setReason] = useState('');
+  const [medicalReport, setMedicalReport] = useState('');
 
   // Unique specialties from doctors
   const specialties = [...new Set(doctors.map(d => d.specialty).filter(Boolean))].sort();
@@ -1085,6 +1085,22 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
     (a.appointmentType === 'online' || a.sessionId?.sessionType === 'online') &&
     a.status !== 'cancelled'
   );
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMedicalReport(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const loadSessions = async (doctor) => {
     setLoadingSessions(true);
@@ -1125,6 +1141,7 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
       patientNIC,
       patientPhone,
       reasonForVisit: reason,
+      medicalReport,
       appointmentType: 'online'
     });
     setStep('payment');
@@ -1154,6 +1171,7 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
     setPatientNIC('');
     setPatientPhone('');
     setReason('');
+    setMedicalReport('');
     setError('');
     setBookingSuccess(false);
     setPendingAppointment(null);
@@ -1268,12 +1286,32 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
                                   <Icon path={icons.download} size={14} />
                                 </button>
                               )}
-                              {apt.paymentStatus === 'paid' && (
-                                <span className="px-2 py-1 text-[10px] font-black uppercase bg-green-50 text-green-600 border border-green-100 rounded-lg">Paid</span>
-                              )}
+                              <div className="flex flex-col items-end gap-1.5 mr-2">
+                                {apt.paymentStatus === 'paid' && (
+                                  <span className="px-2 py-1 text-[9px] font-black uppercase bg-green-50 text-green-600 border border-green-100 rounded-lg">Payment Confirmed</span>
+                                )}
+                                {apt.onlineStatus === 'pending' ? (
+                                  <div className="flex flex-col items-end">
+                                    <span className="px-2 py-1 text-[9px] font-black uppercase bg-amber-50 text-amber-600 border border-amber-100 rounded-lg">Awaiting Review</span>
+                                    <p className="text-[8px] text-amber-500 font-bold mt-0.5 truncate max-w-[100px]">Waiting for doctor's approval</p>
+                                  </div>
+                                ) : (apt.onlineStatus === 'approved' || !apt.onlineStatus) ? (
+                                  <div className="flex flex-col items-end">
+                                    <span className="px-2 py-1 text-[9px] font-black uppercase bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-lg">Ready for Call</span>
+                                    <p className="text-[8px] text-emerald-500 font-bold mt-0.5">Doctor approved your session</p>
+                                  </div>
+                                ) : (
+                                  <span className="px-2 py-1 text-[9px] font-black uppercase bg-red-50 text-red-600 border border-red-100 rounded-lg">Declined</span>
+                                )}
+                              </div>
                               <button
                                 onClick={() => handleJoinCall(apt)}
-                                className="h-10 px-5 bg-[#2299C9] text-white rounded-xl font-bold text-sm hover:bg-[#1C82AB] transition-all flex items-center gap-2 shadow-lg shadow-sky-500/20"
+                                disabled={apt.onlineStatus !== 'approved'}
+                                className={`h-10 px-5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg ${
+                                  apt.onlineStatus === 'approved' 
+                                    ? 'bg-[#2299C9] text-white hover:bg-[#1C82AB] shadow-sky-500/20' 
+                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200'
+                                }`}
                               >
                                 <Icon path={icons.video} size={16} />
                                 JOIN CALL
@@ -1518,6 +1556,41 @@ const TelemedicineTab = ({ user, doctors, appointments, setAppointments, navigat
               <label className="block text-gray-600 text-xs font-medium mb-1.5">Reason for Visit</label>
               <input type="text" value={reason} onChange={e => setReason(e.target.value)}
                 placeholder="Brief description" className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all" />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="flex items-center justify-between text-gray-600 text-xs font-medium mb-1.5">
+                <span>Medical Reports / Documents (Optional)</span>
+                {medicalReport && <span className="text-green-600 font-bold uppercase text-[10px]">File Attached ✓</span>}
+              </label>
+              <div className="relative group">
+                <input
+                  type="file"
+                  id="tabMedicalReport"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                />
+                <label
+                  htmlFor="tabMedicalReport"
+                  className={`w-full h-24 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${medicalReport ? 'border-green-100 bg-green-50/20' : 'border-gray-100 bg-gray-50/50 hover:border-[#2299C9] hover:bg-white'}`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${medicalReport ? 'bg-green-600 text-white shadow-lg' : 'bg-white text-gray-400 border border-gray-100 group-hover:bg-[#2299C9] group-hover:text-white'}`}>
+                    <Icon path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>} size={14} />
+                  </div>
+                  <span className={`text-[11px] font-bold ${medicalReport ? 'text-green-700' : 'text-gray-400'}`}>
+                    {medicalReport ? 'Clinical Report Successfully Attached' : 'Attach Medical Reports (PDF/JPG)'}
+                  </span>
+                </label>
+                {medicalReport && (
+                  <button
+                    onClick={() => setMedicalReport('')}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-white text-red-600 rounded-full flex items-center justify-center text-[10px] hover:bg-red-50 shadow-md border border-gray-100 transition-all active:scale-90"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
