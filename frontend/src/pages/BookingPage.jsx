@@ -33,6 +33,7 @@ const BookingPage = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -177,50 +178,100 @@ const BookingPage = () => {
               </div>
 
               {sessions.length > 0 ? (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {sessions.map((sess) => {
-                    const slotsLeft = sess.maxAppointments - sess.currentAppointmentsCount;
-                    const isFull = slotsLeft <= 0;
-                    const isSelected = selectedSession?._id === sess._id;
+                <div className="space-y-10">
+                  {/* Date Selection */}
+                  <div className="space-y-4">
+                    <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] ml-1">Select Consultation Date</h3>
+                    <div className="flex flex-wrap gap-2.5">
+                      {(() => {
+                        const sessionsByDate = sessions.reduce((acc, sess) => {
+                          const d = new Date(sess.date).toDateString();
+                          if (!acc[d]) acc[d] = [];
+                          acc[d].push(sess);
+                          return acc;
+                        }, {});
 
-                    return (
-                      <button
-                        key={sess._id}
-                        disabled={isFull}
-                        onClick={() => setSelectedSession(sess)}
-                        className={`text-left p-6 rounded-[2.2rem] border-2 transition-all ${isFull
-                            ? 'bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed text-gray-300'
-                            : isSelected
-                              ? 'bg-gray-900 border-gray-900 text-white shadow-xl shadow-gray-300'
-                              : 'bg-white border-gray-100 hover:border-gray-900 text-gray-900'
-                          }`}
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <div className={`p-2 rounded-xl ${isSelected ? 'bg-white/10' : sess.sessionType === 'online' ? 'bg-purple-50' : 'bg-gray-50'}`}>
-                            <Icon path={sess.sessionType === 'online' ? icons.video : icons.calendar} size={18} className={sess.sessionType === 'online' && !isSelected ? 'text-purple-500' : ''} />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {sess.sessionType === 'online'
-                              ? <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'}`}>Video Call</span>
-                              : <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>In-Person</span>
-                            }
-                            {isSelected && <Icon path={icons.check} size={18} />}
-                            {isFull && <div className="text-[9px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Sold Out</div>}
-                          </div>
-                        </div>
-                        <p className={`text-sm font-bold uppercase tracking-tighter mb-1 ${isSelected ? 'text-white/60' : 'text-gray-400'}`}>
-                          {new Date(sess.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </p>
-                        <p className={`text-xl font-extrabold ${isFull ? 'text-gray-300' : ''}`}>{sess.startTime} – {sess.endTime}</p>
-                        <div className="mt-4 flex items-center justify-between">
-                          <span className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'text-white/40' : 'text-gray-300'}`}>Availability</span>
-                          <span className={`text-xs font-bold ${isFull ? 'text-red-500' : ''}`}>
-                            {isFull ? '0 slots left' : `${slotsLeft} slots left`}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
+                        return Object.keys(sessionsByDate)
+                          .sort((a, b) => new Date(a) - new Date(b))
+                          .map(dateStr => {
+                            const date = new Date(dateStr);
+                            const isActive = selectedDate === dateStr;
+                            return (
+                              <button
+                                key={dateStr}
+                                onClick={() => {
+                                  setSelectedDate(dateStr);
+                                  setSelectedSession(null);
+                                }}
+                                className={`px-6 py-4 rounded-2xl border-2 transition-all flex flex-col items-center min-w-[100px] ${isActive
+                                    ? 'bg-gray-900 border-gray-900 text-white shadow-lg'
+                                    : 'bg-white border-gray-100 hover:border-gray-900 text-gray-900'
+                                  }`}
+                              >
+                                <span className={`text-[10px] font-black uppercase mb-1 ${isActive ? 'text-white/60' : 'text-gray-400'}`}>
+                                  {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                                </span>
+                                <span className="text-xl font-black leading-none">{date.getDate()}</span>
+                                <span className={`text-[10px] font-bold mt-1 ${isActive ? 'text-white/60' : 'text-gray-400'}`}>
+                                  {date.toLocaleDateString('en-US', { month: 'short' })}
+                                </span>
+                              </button>
+                            );
+                          });
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Time Selection */}
+                  {selectedDate && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-500">
+                      <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] ml-1">Select Preferred Time</h3>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        {sessions
+                          .filter(s => new Date(s.date).toDateString() === selectedDate)
+                          .map((sess) => {
+                            const slotsLeft = sess.maxAppointments - sess.currentAppointmentsCount;
+                            const isFull = slotsLeft <= 0;
+                            const isSelected = selectedSession?._id === sess._id;
+
+                            return (
+                              <button
+                                key={sess._id}
+                                disabled={isFull}
+                                onClick={() => setSelectedSession(sess)}
+                                className={`text-left p-6 rounded-[2.2rem] border-2 transition-all ${isFull
+                                    ? 'bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed text-gray-300'
+                                    : isSelected
+                                      ? 'bg-[#2299C9] border-[#2299C9] text-white shadow-xl shadow-sky-500/20'
+                                      : 'bg-white border-gray-100 hover:border-[#2299C9] text-gray-900'
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between mb-4">
+                                  <div className={`p-2 rounded-xl ${isSelected ? 'bg-white/10' : sess.sessionType === 'online' ? 'bg-purple-50' : 'bg-gray-50'}`}>
+                                    <Icon path={sess.sessionType === 'online' ? icons.video : icons.calendar} size={18} className={sess.sessionType === 'online' && !isSelected ? 'text-purple-500' : ''} />
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {sess.sessionType === 'online'
+                                      ? <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'}`}>Video Call</span>
+                                      : <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>In-Person</span>
+                                    }
+                                    {isSelected && <Icon path={icons.check} size={18} />}
+                                    {isFull && <div className="text-[9px] font-black uppercase tracking-widest text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Sold Out</div>}
+                                  </div>
+                                </div>
+                                <p className={`text-xl font-extrabold ${isFull ? 'text-gray-300' : ''}`}>{sess.startTime} – {sess.endTime}</p>
+                                <div className="mt-4 flex items-center justify-between">
+                                  <span className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'text-white/40' : 'text-gray-300'}`}>Availability</span>
+                                  <span className={`text-xs font-bold ${isFull ? 'text-red-500' : ''}`}>
+                                    {isFull ? '0 slots left' : `${slotsLeft} slots left`}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-white border border-gray-100 rounded-[3rem] p-16 text-center shadow-sm">

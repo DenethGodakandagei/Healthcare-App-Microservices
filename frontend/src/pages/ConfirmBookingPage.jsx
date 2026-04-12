@@ -40,6 +40,7 @@ const ConfirmBookingPage = () => {
   const [patientNIC, setPatientNIC] = useState('');
   const [patientPhone, setPatientPhone] = useState('');
   const [reason, setReason] = useState('');
+  const [medicalReport, setMedicalReport] = useState('');
   const [loadingProfile, setLoadingProfile] = useState(false);
 
   useEffect(() => {
@@ -102,6 +103,7 @@ const ConfirmBookingPage = () => {
         patientName,
         patientNIC,
         patientPhone,
+        medicalReport,
         appointmentType: isOnline ? 'online' : 'physical'
       });
       setPendingAppointment(res.data?.data);
@@ -198,6 +200,9 @@ const ConfirmBookingPage = () => {
                 setPatientPhone={setPatientPhone}
                 reason={reason}
                 setReason={setReason}
+                medicalReport={medicalReport}
+                setMedicalReport={setMedicalReport}
+                isOnline={isOnline}
                 error={error}
                 booking={booking}
                 onBook={handleBook}

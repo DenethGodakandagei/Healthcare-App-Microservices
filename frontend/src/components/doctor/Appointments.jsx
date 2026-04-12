@@ -9,6 +9,37 @@ const Appointments = () => {
   // Determine if we should only show online or physical based on path
   const onlyType = location.pathname.includes('physical') ? 'physical' : 'online';
 
+  const handleAccept = async (id) => {
+    try {
+      const { appointmentAPI } = await import('../../services/api');
+      await appointmentAPI.updateStatus(id, { status: 'scheduled', onlineStatus: 'approved' });
+      setAppointments(prev => prev.map(a => a._id === id ? { ...a, status: 'scheduled', onlineStatus: 'approved' } : a));
+    } catch (err) {
+      console.error('Failed to approve appointment:', err);
+    }
+  };
+
+  const handleDecline = async (id) => {
+    if (!window.confirm('Are you sure you want to decline this consultation?')) return;
+    try {
+      const { appointmentAPI } = await import('../../services/api');
+      await appointmentAPI.updateStatus(id, { status: 'cancelled', onlineStatus: 'declined' });
+      setAppointments(prev => prev.map(a => a._id === id ? { ...a, status: 'cancelled', onlineStatus: 'declined' } : a));
+    } catch (err) {
+      console.error('Failed to decline appointment:', err);
+    }
+  };
+
+  const handleComplete = async (id) => {
+    try {
+      const { appointmentAPI } = await import('../../services/api');
+      await appointmentAPI.updateStatus(id, { status: 'completed' });
+      setAppointments(prev => prev.map(a => a._id === id ? { ...a, status: 'completed' } : a));
+    } catch (err) {
+      console.error('Failed to complete appointment:', err);
+    }
+  };
+
   const handleRemove = async (id) => {
     if (!window.confirm('Are you sure you want to remove this appointment record?')) return;
     try {
@@ -29,8 +60,8 @@ const Appointments = () => {
     });
 
     return {
-      pending: filtered.filter(a => a.status === 'pending'),
-      active: filtered.filter(a => a.status === 'confirmed' || a.status === 'scheduled'),
+      pending: filtered.filter(a => a.status === 'pending' || (a.appointmentType === 'online' && a.onlineStatus === 'pending')),
+      active: filtered.filter(a => (a.status === 'confirmed' || a.status === 'scheduled') && (a.appointmentType !== 'online' || (a.onlineStatus === 'approved' || !a.onlineStatus))),
       all: filtered
     };
   }, [appointments, onlyType]);
@@ -80,7 +111,15 @@ const Appointments = () => {
               <h3 className="text-gray-900 font-bold uppercase tracking-widest text-[10px]">Action Required</h3>
             </div>
             <div className="grid grid-cols-1 gap-3">
-              {groups.pending.map(apt => <AppointmentCard key={apt._id} apt={apt} onRemove={handleRemove} />)}
+              {groups.pending.map(apt => (
+                <AppointmentCard 
+                  key={apt._id} 
+                  apt={apt} 
+                  onAccept={handleAccept} 
+                  onDecline={handleDecline}
+                  onRemove={handleRemove} 
+                />
+              ))}
             </div>
           </div>
         )}
@@ -91,11 +130,20 @@ const Appointments = () => {
             <span className={"w-1.5 h-1.5 rounded-full " + (onlyType === 'online' ? "bg-[#0EA5E9]" : "bg-emerald-500")} />
             <h3 className="text-gray-900 font-bold uppercase tracking-widest text-[10px]">Active Registry</h3>
           </div>
-          {groups.all.filter(a => a.status !== 'pending').length === 0 ? (
+          {groups.all.filter(a => a.status !== 'pending' && !(a.appointmentType === 'online' && a.onlineStatus === 'pending')).length === 0 ? (
             <div className="p-8 border-2 border-dashed border-gray-100 rounded-2xl text-center text-gray-300 text-[10px] font-bold uppercase tracking-widest">No previous history in this category</div>
           ) : (
             <div className="grid grid-cols-1 gap-3">
-              {groups.all.filter(a => a.status !== 'pending').map(apt => <AppointmentCard key={apt._id} apt={apt} onRemove={handleRemove} />)}
+              {groups.all.filter(a => a.status !== 'pending' && !(a.appointmentType === 'online' && a.onlineStatus === 'pending')).map(apt => (
+                <AppointmentCard 
+                  key={apt._id} 
+                  apt={apt} 
+                  onAccept={handleAccept}
+                  onDecline={handleDecline}
+                  onComplete={handleComplete}
+                  onRemove={handleRemove} 
+                />
+              ))}
             </div>
           )}
         </div>
