@@ -55,6 +55,9 @@ const appointmentSchema = new mongoose.Schema({
   reasonForVisit: {
     type: String
   },
+  medicalReport: {
+    type: String
+  },
   notes: {
     type: String
   },
@@ -63,11 +66,11 @@ const appointmentSchema = new mongoose.Schema({
     enum: ['physical', 'online'],
     default: 'physical'
   },
-  onlineStatus: {
-    type: String,
-    enum: ['pending', 'approved', 'declined'],
-    default: 'approved' // Set to approved by default as per user request
-  },
+    onlineStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'declined'],
+      default: 'pending'
+    },
   paymentStatus: {
     type: String,
     enum: ['pending', 'paid', 'failed', 'refunded'],

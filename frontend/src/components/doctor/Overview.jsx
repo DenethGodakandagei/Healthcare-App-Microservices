@@ -70,7 +70,8 @@ const Overview = () => {
                 <AppointmentCard
                   key={apt._id}
                   apt={apt}
-                  onAccept={(id) => appointmentAPI.updateStatus(id, { status: 'confirmed' }).then(() => window.location.reload())}
+                  onAccept={(id) => appointmentAPI.updateStatus(id, { status: 'scheduled', onlineStatus: 'approved' }).then(() => window.location.reload())}
+                  onDecline={(id) => appointmentAPI.updateStatus(id, { status: 'cancelled', onlineStatus: 'declined' }).then(() => window.location.reload())}
                   onComplete={(id) => appointmentAPI.updateStatus(id, { status: 'completed' }).then(() => window.location.reload())}
                 />
               ))}

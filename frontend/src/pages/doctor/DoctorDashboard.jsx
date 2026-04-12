@@ -59,8 +59,12 @@ const DoctorDashboard = () => {
     load();
   }, [user]);
 
-  const pending = appointments.filter(a => a.status === 'pending');
-  const confirmed = appointments.filter(a => a.status === 'confirmed');
+  const pending = appointments.filter(a => a.status === 'pending' || (a.appointmentType === 'online' && a.onlineStatus === 'pending'));
+  const confirmed = appointments.filter(a => 
+    a.status === 'confirmed' || 
+    (a.appointmentType === 'online' && (a.onlineStatus === 'approved' || !a.onlineStatus) && a.status === 'scheduled') ||
+    (a.status === 'scheduled' && a.appointmentType !== 'online')
+  );
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: 'home', path: '/doctor/dashboard' },
@@ -178,23 +182,14 @@ const DoctorDashboard = () => {
           </div>
 
           <div className="flex items-center gap-4">
-
-             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">On Duty</span>
-             </div>
-             <button 
-              onClick={() => navigate('/doctor/dashboard/notifications')}
-              className={`relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100 ${isPathActive('/doctor/dashboard/notifications') ? 'bg-sky-50 text-[#0EA5E9]' : ''}`}
-             >
-              </button>
-
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
               <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">On Duty</span>
             </div>
-            <button className="relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100">
-
+            <button 
+              onClick={() => navigate('/doctor/dashboard/notifications')}
+              className={`relative text-gray-500 hover:text-[#0EA5E9] transition-colors p-1.5 rounded-lg hover:bg-gray-100 ${isPathActive('/doctor/dashboard/notifications') ? 'bg-sky-50 text-[#0EA5E9]' : ''}`}
+            >
               <Icon path={icons.bell} size={20} />
               {(unreadCount > 0 || pending.length > 0) && (
                 <span className="absolute top-1 right-1 w-2 h-2 bg-[#2299C9] rounded-full" />

@@ -27,9 +27,28 @@ const BookingForm = ({
   booking,
   onBook,
   onFillSelf,
-  loadingProfile
+  loadingProfile,
+  medicalReport,
+  setMedicalReport,
+  isOnline
 }) => {
   if (!selectedSession) return null;
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMedicalReport(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="bg-white border border-gray-100 rounded-[3rem] p-10 shadow-2xl shadow-gray-100/50 animate-in slide-in-from-bottom-8 duration-700">
@@ -114,6 +133,44 @@ const BookingForm = ({
             className="w-full p-6 bg-gray-50/50 border border-gray-100 rounded-[2rem] text-gray-900 font-bold focus:outline-none focus:ring-4 focus:ring-gray-900/5 focus:bg-white focus:border-gray-900 transition-all h-40 placeholder:text-gray-300 placeholder:font-semibold resize-none"
           />
         </div>
+
+        {isOnline && (
+          <div className="space-y-3">
+             <label className="flex items-center justify-between text-gray-400 text-[10px] font-black uppercase tracking-[0.15em] ml-1">
+                <span>Medical Reports / Documents (Optional)</span>
+                {medicalReport && <span className="text-green-600 font-bold">File Attached ✓</span>}
+             </label>
+             <div className="relative">
+                <input
+                  type="file"
+                  id="medicalReport"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                />
+                <label 
+                  htmlFor="medicalReport"
+                  className={`w-full h-32 border-2 border-dashed rounded-[2rem] flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${medicalReport ? 'border-green-200 bg-green-50/50' : 'border-gray-100 bg-gray-50/30 hover:border-gray-900 hover:bg-white'}`}
+                >
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${medicalReport ? 'bg-green-600 text-white shadow-lg shadow-green-200' : 'bg-white text-gray-400 border border-gray-100 group-hover:bg-gray-900 group-hover:text-white'}`}>
+                    <Icon path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>} size={18} />
+                  </div>
+                  <span className={`text-sm font-bold ${medicalReport ? 'text-green-700' : 'text-gray-400'}`}>
+                    {medicalReport ? 'Report Successfully Attached' : 'Attach Clinical Documents (PDF/JPG)'}
+                  </span>
+                </label>
+                {medicalReport && (
+                  <button 
+                    onClick={() => setMedicalReport('')}
+                    className="absolute -top-3 -right-3 w-8 h-8 bg-white text-red-600 rounded-full flex items-center justify-center text-sm hover:bg-red-50 shadow-xl border border-gray-100 transition-all active:scale-90"
+                    title="Remove file"
+                  >
+                    ✕
+                  </button>
+                )}
+             </div>
+          </div>
+        )}
 
         {error && (
           <div className="flex items-center gap-4 p-5 bg-red-50/50 border border-red-100 rounded-[1.5rem] text-red-600 animate-in fade-in slide-in-from-left-4 duration-300">
