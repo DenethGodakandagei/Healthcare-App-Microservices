@@ -189,3 +189,28 @@ export const getNotifications = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
+
+export const updateNotificationStatus = async (req, res) => {
+    try {
+        const { notificationId } = req.params;
+        const { status } = req.body;
+
+        if (!["PENDING", "SENT", "FAILED", "SEEN"].includes(status)) {
+            return res.status(400).json({ success: false, message: "Invalid status" });
+        }
+
+        const notification = await Notification.findByIdAndUpdate(
+            notificationId,
+            { status },
+            { new: true }
+        );
+
+        if (!notification) {
+            return res.status(404).json({ success: false, message: "Notification not found" });
+        }
+
+        res.status(200).json({ success: true, notification });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};

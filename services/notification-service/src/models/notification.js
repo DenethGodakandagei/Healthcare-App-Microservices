@@ -19,7 +19,7 @@ const NotificationSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["PENDING", "SENT", "FAILED"],
+            enum: ["PENDING", "SENT", "FAILED", "SEEN"],
             default: "PENDING"
         },
         error: {
