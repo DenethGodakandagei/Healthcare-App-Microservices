@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { patientAPI, appointmentAPI, doctorAPI, sessionAPI, notificationAPI, paymentAPI, symptomAPI } from '../../services/api';
+import ReactMarkdown from 'react-markdown';
 import doc1 from '../../assets/doc1.png';
 import doc2 from '../../assets/doc2.png';
 import doc3 from '../../assets/doc3.png';
@@ -991,8 +992,14 @@ const SymptomCheckerTab = ({ user }) => {
               <h3 className="text-gray-900 font-bold text-lg">Analysis Result</h3>
             </div>
 
-            <div className="prose prose-sm max-w-none text-gray-700 font-medium leading-relaxed whitespace-pre-wrap">
-              {result}
+            <div className="bg-white/80 backdrop-blur-sm border-2 border-[#2299C9]/10 rounded-3xl p-8 shadow-xl shadow-blue-500/5 relative overflow-hidden group hover:border-[#2299C9]/30 transition-all duration-500">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Icon path={icons.sparkles} size={64} className="text-[#2299C9]" />
+              </div>
+
+              <div className="text-[#334155] leading-relaxed relative z-10 ai-analysis-markdown">
+                <ReactMarkdown>{result}</ReactMarkdown>
+              </div>
             </div>
 
             <div className="mt-8 pt-8 border-t border-gray-100 flex items-center justify-between">

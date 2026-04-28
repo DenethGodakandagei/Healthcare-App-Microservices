@@ -55,3 +55,52 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari, Opera */
 }
+
+/* AI Analysis Markdown Styling */
+.ai-analysis-markdown h3 { 
+  font-size: 1.25rem; 
+  font-weight: 800; 
+  color: #1e293b; 
+  margin-top: 1.5rem; 
+  margin-bottom: 0.75rem; 
+  border-left: 4px solid #2299C9; 
+  padding-left: 0.75rem; 
+}
+
+.ai-analysis-markdown p { 
+  margin-bottom: 1rem; 
+  font-weight: 500;
+}
+
+.ai-analysis-markdown ul { 
+  list-style-type: none; 
+  padding-left: 0; 
+  margin-bottom: 1.5rem;
+}
+
+.ai-analysis-markdown li { 
+  position: relative; 
+  padding-left: 1.5rem; 
+  margin-bottom: 0.65rem; 
+  font-weight: 500;
+  color: #475569;
+}
+
+.ai-analysis-markdown li::before { 
+  content: '→'; 
+  position: absolute; 
+  left: 0; 
+  color: #2299C9; 
+  font-weight: bold; 
+}
+
+.ai-analysis-markdown strong { 
+  font-weight: 700; 
+  color: #2299C9; 
+}
+
+.ai-analysis-markdown hr {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid rgba(34, 153, 201, 0.1);
+}

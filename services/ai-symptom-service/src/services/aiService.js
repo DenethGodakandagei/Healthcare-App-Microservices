@@ -1,47 +1,107 @@
-import axios from "axios";
+const MOCK_DATA = [
+    {
+        keywords: ["fever", "cough", "throat", "shivering", "chills", "runny nose", "cold"],
+        condition: "Viral Respiratory Infection or Influenza",
+        specialty: "General Physician",
+        advice: "Ensure plenty of rest and hydration. Monitor temperature regularly."
+    },
+    {
+        keywords: ["headache", "migraine", "dizziness", "vertigo", "confusion", "numbness"],
+        condition: "Neurological Concern (Possible Migraine or Tension Headache)",
+        specialty: "Neurologist",
+        advice: "Rest in a dark, quiet room. Avoid screen time and bright lights."
+    },
+    {
+        keywords: ["chest pain", "short of breath", "palpitations", "rapid heartbeat", "tightness"],
+        condition: "Cardiovascular Distress (Immediate Evaluation Recommended)",
+        specialty: "Cardiologist / Emergency Medicine",
+        advice: "Seek immediate medical attention if pain is severe or radiating to the arm/jaw."
+    },
+    {
+        keywords: ["stomach pain", "nausea", "vomiting", "diarrhea", "bloating", "acid", "heartburn"],
+        condition: "Gastrointestinal Disorder (Gastritis or Acid Reflux)",
+        specialty: "Gastroenterologist",
+        advice: "Avoid spicy or oily foods. Try small, frequent meals."
+    },
+    {
+        keywords: ["back pain", "joint pain", "swelling", "fracture", "sprane", "muscle ache"],
+        condition: "Musculoskeletal Issue / Orthopedic Strain",
+        specialty: "Orthopedic Surgeon / Physiotherapist",
+        advice: "Avoid heavy lifting. Use cold or warm compresses depending on inflammation."
+    },
+    {
+        keywords: ["rash", "itchy", "skin", "acne", "burn", "redness", "lesion"],
+        condition: "Dermatological Condition",
+        specialty: "Dermatologist",
+        advice: "Avoid scratching. Apply hypoallergenic moisturizers if needed."
+    },
+    {
+        keywords: ["ear pain", "hearing loss", "ringing", "nose bleed", "difficulty swallowing"],
+        condition: "ENT (Ear, Nose, and Throat) Condition",
+        specialty: "Otolaryngologist (ENT Specialist)",
+        advice: "Avoid inserting anything into the ear canal."
+    },
+    {
+        keywords: ["blurry vision", "eye pain", "red eyes", "dry eyes", "seeing spots"],
+        condition: "Ocular Concern / Vision Impairment",
+        specialty: "Ophthalmologist",
+        advice: "Restrict screen time and avoid rubbing the eyes."
+    },
+    {
+        keywords: ["thirsty", "tired", "weight loss", "frequent urination", "sugar"],
+        condition: "Metabolic Concern (Possible Endocrine Issue)",
+        specialty: "Endocrinologist",
+        advice: "Monitor fluid intake and dietary habits."
+    },
+    {
+        keywords: ["anxiety", "depression", "panic", "sleep issues", "mood swings"],
+        condition: "Mental Health Concern",
+        specialty: "Psychiatrist / Psychologist",
+        advice: "Practice mindfulness and consider talking to a counselor."
+    },
+    {
+        keywords: ["urinary", "kidney", "bladder", "burning sensation"],
+        condition: "Urological Infection or Condition",
+        specialty: "Urologist",
+        advice: "Increase water intake and avoid caffeine."
+    }
+];
 
 export const analyzeSymptoms = async (symptoms) => {
-    const isMock = process.env.USE_MOCK_AI === "true" || process.env.USE_MOCK_AI === true;
-    if (isMock) {
-        console.log("Mock AI Mode: Returning simulated response.");
-        return `Based on your symptoms (${symptoms}), our AI suggests:
-1. Possible Condition: Mild viral infection or seasonal fatigue.
-2. Recommended Specialty: General Practitioner or Internal Medicine.
-This is a simulated response because the AI service is in mock mode. Please consult a doctor for a professional diagnosis.`;
-    }
-    console.log("OpenAI API Key starts with:", process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) : "MISSING");
-    try {
-        const response = await axios.post(
-            "https://api.openai.com/v1/chat/completions",
-            {
-                model: "gpt-4o-mini",
-                messages: [
-                    {
-                        role: "system",
-                        content:
-                            "You are a medical assistant. Based on symptoms, suggest possible conditions and recommended doctor specialties. Do NOT give final diagnosis.",
-                    },
-                    {
-                        role: "user",
-                        content: `Symptoms: ${symptoms}`,
-                    },
-                ],
-                temperature: 0.3,
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
+    console.log("Analyzing symptoms (Enhanced Mock Mode):", symptoms);
+    
+    const input = symptoms.toLowerCase();
+    
+    // Logic to find the best match based on keyword frequency or first match
+    // Here we use find but we could also sort by number of matches for better accuracy
+    let match = MOCK_DATA.find(m => m.keywords.some(k => input.includes(k)));
 
-        const result = response.data.choices[0].message.content;
-
-        return result;
-    } catch (error) {
-        const errorMsg = error.response?.data?.error?.message || error.message;
-        console.error("AI Error:", errorMsg);
-        throw new Error(errorMsg);
+    if (!match) {
+        match = {
+            condition: "Undetermined Symptom Complex",
+            specialty: "Internal Medicine Specialist",
+            advice: "Please provide more details or consult a general practitioner for an initial screening."
+        };
     }
+
+    // Simulate analysis time
+    await new Promise(resolve => setTimeout(resolve, 1200));
+
+    return `### 🩺 BioGrid AI Analysis Result
+
+**Symptoms Analyzed:** "${symptoms}"
+
+---
+
+**1. Primary Suggestion:** 
+The symptoms provided are consistent with a **${match.condition}**.
+
+**2. Recommended Specialist:** 
+We recommend consulting a **${match.specialty}** for a thorough examination.
+
+**3. Initial Guidance:**
+${match.advice}
+
+---
+*Disclaimer: This is a simulated analysis based on predefined medical patterns. It is NOT a professional diagnosis. If you are experiencing an emergency, please call your local emergency services immediately.*`;
 };

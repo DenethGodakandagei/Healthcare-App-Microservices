@@ -1,6 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
+import 'dotenv/config';
 console.log('Identity Service MONGO_URI loaded:', process.env.MONGO_URI ? 'YES' : 'NO');
 
 import express from 'express';
