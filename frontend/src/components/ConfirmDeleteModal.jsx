@@ -4,7 +4,7 @@ const Icon = ({ path, size = 20, className = "" }) => (
   </svg>
 );
 
-const ConfirmDeleteModal = ({ open, onConfirm, onCancel }) => {
+const ConfirmDeleteModal = ({ open, onConfirm, onCancel, title = "Cancel Appointment?", message = "This action cannot be undone. Are you sure you want to cancel this appointment?", confirmText = "Cancel", cancelText = "Keep" }) => {
   if (!open) return null;
 
   return (
@@ -14,22 +14,22 @@ const ConfirmDeleteModal = ({ open, onConfirm, onCancel }) => {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
             <Icon path={<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>} size={32} className="text-red-600" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900">Cancel Appointment?</h3>
+          <h3 className="text-xl font-bold text-gray-900">{title}</h3>
           <p className="text-gray-500 text-sm">
-            This action cannot be undone. Are you sure you want to cancel this appointment?
+            {message}
           </p>
           <div className="flex gap-3 pt-2">
             <button
               onClick={onCancel}
               className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium"
             >
-              Keep
+              {cancelText}
             </button>
             <button
               onClick={onConfirm}
               className="flex-1 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium"
             >
-              Cancel
+              {confirmText}
             </button>
           </div>
         </div>

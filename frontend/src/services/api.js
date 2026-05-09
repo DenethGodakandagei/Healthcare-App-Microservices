@@ -84,6 +84,13 @@ export const telemedicineAPI = {
 export const notificationAPI = {
   getNotifications: (userId) => API.get(`/notifications/${userId}`),
   sendNotification: (data) => API.post('/notifications/send', data),
+  updateStatus: (id, status) => API.put(`/notifications/${id}/status`, { status }),
+  delete: (id) => API.delete(`/notifications/${id}`),
+};
+
+// AI Symptom Checker
+export const symptomAPI = {
+  analyze: (data) => API.post('/ai/symptoms/analyze', data),
 };
 
 

@@ -1,23 +1,19 @@
-import express from 'express';
-import cors from 'cors';
-import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import app from "./app.js";
+import connectDB from "./config/db.js";
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Ensure path is correct relative to this file
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// Request logger middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} request received at ${req.url}`);
-  next();
-});
+// Debugging: verify key is loaded
+console.log('AI Service: GEMINI_API_KEY loaded:', process.env.GEMINI_API_KEY ? 'YES (Starts with: ' + process.env.GEMINI_API_KEY.substring(0, 5) + '...)' : 'NO');
 
-// AI Symptom Checker Service health check
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', service: 'AI Symptom Checker Service' });
-});
+connectDB();
 
-const PORT = process.env.PORT || 4001;
+const PORT = process.env.PORT || 5005;
 app.listen(PORT, () => {
-  console.log(`AI Symptom Checker Service listening on port ${PORT}`);
+    console.log(`AI Symptom Server running on port ${PORT}`);
 });

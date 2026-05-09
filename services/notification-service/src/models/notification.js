@@ -14,12 +14,12 @@ const NotificationSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["chat", "email", "sms", "security"],
+            enum: ["chat", "email", "sms", "security", "appointment"],
             default: "chat"
         },
         status: {
             type: String,
-            enum: ["PENDING", "SENT", "FAILED"],
+            enum: ["PENDING", "SENT", "FAILED", "SEEN"],
             default: "PENDING"
         },
         error: {

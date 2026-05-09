@@ -102,7 +102,10 @@ const ConfirmBookingPage = () => {
         patientName,
         patientNIC,
         patientPhone,
-        appointmentType: isOnline ? 'online' : 'physical'
+        appointmentType: isOnline ? 'online' : 'physical',
+        patientEmail: user.email,
+        doctorId: doctor._id,
+        doctorName: `Dr. ${doctor.firstName} ${doctor.lastName}`
       });
       setPendingAppointment(res.data?.data);
       setShowPayment(true);
